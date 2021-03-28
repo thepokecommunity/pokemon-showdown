@@ -1428,7 +1428,7 @@ export class GlobalRoomState {
 		});
 		if (Config.reportbattles) {
 			const reportRoom = Rooms.get(Config.reportbattles === true ? 'lobby' : Config.reportbattles);
-			if (reportRoom) {
+			if (reportRoom && !room.lobbyTour) {
 				const reportPlayers = players.map(p => p.getIdentity()).join('|');
 				reportRoom
 					.add(`|b|${room.roomid}|${reportPlayers}`)

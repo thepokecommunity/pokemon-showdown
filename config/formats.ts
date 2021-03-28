@@ -26,7 +26,7 @@ export const Formats: FormatList = [
 		section: "Sw/Sh Singles",
 	},
 	{
-		name: "[Gen 8] Random Battle",
+		name: "[Gen 8] Random",
 		desc: `Randomized teams of level-balanced Pok&eacute;mon with sets that are generated to be competitively viable.`,
 		threads: [
 			`&bullet; <a href="https://www.smogon.com/forums/threads/3656537/">Random Battle Suggestions</a>`,
@@ -34,16 +34,23 @@ export const Formats: FormatList = [
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
+		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Team Preview'],
 	},
 	{
-		name: "[Gen 8] Unrated Random Battle",
+		name: "[Gen 8] Random (no PotD)",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Team Preview'],
+	},
+	{
+		name: "[Gen 8] Unrated Random",
 
 		mod: 'gen8',
 		team: 'random',
 		challengeShow: false,
 		rated: false,
-		ruleset: ['Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
+		ruleset: ['Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 8] OU",
@@ -287,12 +294,12 @@ export const Formats: FormatList = [
 		section: "Sw/Sh Doubles",
 	},
 	{
-		name: "[Gen 8] Random Doubles Battle",
+		name: "[Gen 8] Random Doubles",
 
 		mod: 'gen8',
 		gameType: 'doubles',
 		team: 'random',
-		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 8] Doubles OU",
@@ -1557,11 +1564,11 @@ export const Formats: FormatList = [
 		column: 2,
 	},
 	{
-		name: "[Gen 8] Monotype Random Battle",
+		name: "[Gen 8] Monotype Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['Obtainable', 'Same Type Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
+		ruleset: ['Obtainable', 'Same Type Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 8] Random Battle (No Dmax)",
@@ -1661,7 +1668,6 @@ export const Formats: FormatList = [
 		teamLength: {
 			battle: 2,
 		},
-		searchShow: false,
 		ruleset: ['[Gen 8] Challenge Cup 1v1'],
 	},
 	{
@@ -1670,7 +1676,7 @@ export const Formats: FormatList = [
 
 		mod: 'gen8',
 		team: 'randomHC',
-		ruleset: ['Obtainable Formes', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable Formes', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 8] Doubles Hackmons Cup",
@@ -1678,8 +1684,7 @@ export const Formats: FormatList = [
 		mod: 'gen8',
 		gameType: 'doubles',
 		team: 'randomHC',
-		searchShow: false,
-		ruleset: ['Obtainable', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 8] CAP 1v1",
@@ -1696,7 +1701,7 @@ export const Formats: FormatList = [
 		ruleset: ['Species Clause', 'Team Preview', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Dynamax Clause'],
 	},
 	{
-		name: "[Gen 7] Random Battle",
+		name: "[Gen 7] Random",
 		desc: `Randomized teams of level-balanced Pok&eacute;mon with sets that are generated to be competitively viable.`,
 		threads: [
 			`&bullet; <a href="https://www.smogon.com/forums/threads/3591157/">Sets and Suggestions</a>`,
@@ -1705,17 +1710,16 @@ export const Formats: FormatList = [
 
 		mod: 'gen7',
 		team: 'random',
-		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
-		name: "[Gen 7] Random Doubles Battle",
+		name: "[Gen 7] Random Doubles",
 		threads: [`&bullet; <a href="https://www.smogon.com/forums/threads/3601525/">Sets and Suggestions</a>`],
 
 		mod: 'gen7',
 		gameType: 'doubles',
 		team: 'random',
-		searchShow: false,
-		ruleset: ['Obtainable', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 7] Battle Factory",
@@ -1734,7 +1738,6 @@ export const Formats: FormatList = [
 
 		mod: 'gen7',
 		team: 'randomBSSFactory',
-		searchShow: false,
 		teamLength: {
 			validate: [3, 6],
 			battle: 3,
@@ -1747,23 +1750,21 @@ export const Formats: FormatList = [
 
 		mod: 'gen7',
 		team: 'randomHC',
-		searchShow: false,
-		ruleset: ['HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
-		name: "[Gen 7 Let's Go] Random Battle",
+		name: "[Gen 7 Let's Go] Random",
 
 		mod: 'letsgo',
 		team: 'random',
-		searchShow: false,
-		ruleset: ['Obtainable', 'Allow AVs', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
+		ruleset: ['Obtainable', 'Allow AVs', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Team Preview'],
 	},
 	{
-		name: "[Gen 6] Random Battle",
+		name: "[Gen 6] Random",
 
 		mod: 'gen6',
 		team: 'random',
-		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
 		name: "[Gen 6] Battle Factory",
@@ -1771,39 +1772,38 @@ export const Formats: FormatList = [
 
 		mod: 'gen6',
 		team: 'randomFactory',
-		searchShow: false,
 		ruleset: ['Obtainable', 'Sleep Clause Mod', 'Team Preview', 'HP Percentage Mod', 'Cancel Mod', 'Mega Rayquaza Clause'],
 	},
 	{
-		name: "[Gen 5] Random Battle",
+		name: "[Gen 5] Random",
 
 		mod: 'gen5',
 		team: 'random',
-		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod'],
+		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod', 'Team Preview'],
 	},
 	{
-		name: "[Gen 4] Random Battle",
+		name: "[Gen 4] Random",
 
 		mod: 'gen4',
 		team: 'random',
 		ruleset: ['Obtainable', 'Sleep Clause Mod', 'HP Percentage Mod', 'Cancel Mod'],
 	},
 	{
-		name: "[Gen 3] Random Battle",
+		name: "[Gen 3] Random",
 
 		mod: 'gen3',
 		team: 'random',
 		ruleset: ['Standard'],
 	},
 	{
-		name: "[Gen 2] Random Battle",
+		name: "[Gen 2] Random",
 
 		mod: 'gen2',
 		team: 'random',
 		ruleset: ['Standard'],
 	},
 	{
-		name: "[Gen 1] Random Battle",
+		name: "[Gen 1] Random",
 
 		mod: 'gen1',
 		team: 'random',
@@ -1814,7 +1814,6 @@ export const Formats: FormatList = [
 
 		mod: 'gen1',
 		team: 'randomCC',
-		searchShow: false,
 		ruleset: ['Obtainable', 'HP Percentage Mod', 'Cancel Mod', 'Desync Clause Mod'],
 	},
 	{
@@ -1823,7 +1822,6 @@ export const Formats: FormatList = [
 
 		mod: 'gen1',
 		team: 'randomHC',
-		searchShow: false,
 		ruleset: ['HP Percentage Mod', 'Cancel Mod', 'Desync Clause Mod', 'Sleep Clause Mod', 'Freeze Clause Mod', 'Team Type Preview'],
 		onModifySpecies(species, target, source, effect) {
 			if (!target) return;
@@ -1837,6 +1835,166 @@ export const Formats: FormatList = [
 			}
 		},
 	},
+	{
+		name: "[Gen 8] 1v1 Random",
+
+		mod: 'gen8',
+		teamLength: {
+			battle: 1,
+		},
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Uber Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] OU/UU Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] RU/NU Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] PU Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	/**
+	*{
+	*	name: "[Gen 8] LC Random",
+	*
+	*	mod: 'gen8',
+	*	team: 'random',
+	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*},
+	*/
+	{
+		name: "[Gen 8] Generational Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Kanto Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Johto Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Hoenn Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Sinnoh Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Unova Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Kalos Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Alola Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Galar Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Color Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	/**
+	*{
+	*	name: "[Gen 8] Inverse Random",
+	*
+	*	mod: 'gen8',
+	*	team: 'random',
+	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*	onNegateImmunity: false,
+	*	onEffectiveness(typeMod, target, type, move) {
+	*		// The effectiveness of Freeze Dry on Water isn't reverted
+	*		if (move && move.id === 'freezedry' && type === 'Water') return;
+	*		if (move && !this.getImmunity(move, type)) return 1;
+	*		return -typeMod;
+	*	},
+	*},
+	*/
+	{
+		name: "[Gen 8] Metronome 3v3 Random",
+
+		mod: 'gen8',
+		teamLength: {
+			validate: [3, 6],
+			battle: 3,
+		},
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	{
+		name: "[Gen 8] Metronome 6v6 Random",
+
+		mod: 'gen8',
+		team: 'random',
+		ruleset: ['[Gen 8] Random (no PotD)'],
+	},
+	/**
+	*{
+	*	name: "[Gen 8] Orb Random",
+	*
+	*	mod: 'gen8',
+	*	team: 'random',
+	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*},
+	*/
 
 	// RoA Spotlight
 	///////////////////////////////////////////////////////////////////

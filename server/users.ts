@@ -479,6 +479,10 @@ export class User extends Chat.MessageContext {
 		this.userMessage = '';
 		this.lastWarnedAt = 0;
 
+		// for ladder search messages
+		this.lastLadderTime = 0;
+		this.lastLadderFormat = '';
+
 		// initialize
 		Users.add(this);
 	}

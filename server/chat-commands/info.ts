@@ -1648,11 +1648,12 @@ export const commands: ChatCommands = {
 
 	staff(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<a href="https://www.smogon.com/sim/staff_list">Pok&eacute;mon Showdown Staff List</a>`);
+		this.sendReplyBox(`<a href="https://www.pokecommunity.com/showthread.php?t=434307">Pok&eacute;mon Showdown Staff List</a>`);
 	},
 
 	forums(target, room, user) {
 		if (!this.runBroadcast()) return;
+		this.sendReplyBox(`<a href="https://www.pokecommunity.com">The Pok&eacute;Community Forums</a><br />`);
 		this.sendReplyBox(`<a href="https://www.smogon.com/forums/forums/209/">Pok&eacute;mon Showdown Forums</a>`);
 	},
 
@@ -1989,7 +1990,7 @@ export const commands: ChatCommands = {
 			this.sendReplyBox(
 				`${room ? this.tr`Please follow the rules:` + '<br />' : ``}` +
 				`${room?.settings.rulesLink ? Utils.html`- <a href="${room.settings.rulesLink}">${this.tr`${room.title} room rules`}</a><br />` : ``}` +
-				`- <a href="https://${Config.routes.root}${this.tr`/rules`}">${this.tr`Global Rules`}</a>`
+				`- <a href="https://www.pokecommunity.com/showthread.php?t=434307">${this.tr`Global Rules`}</a>`
 			);
 			return;
 		}

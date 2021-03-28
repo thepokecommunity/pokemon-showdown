@@ -995,6 +995,11 @@ export class Tournament extends Rooms.RoomGame {
 		if (!challenge.from.pendingChallenge) return;
 		if (!player.pendingChallenge) return;
 
+		// Flags lobby tournaments, which is used in server/rooms.ts to prevent reporting battles twice
+		let lobbyTour = false;
+		if (this.room.roomid === 'lobby') {
+			lobbyTour = true;
+		}
 		const room = Rooms.createBattle(this.fullFormat, {
 			isPrivate: this.room.settings.isPrivate,
 			p1: from,
@@ -1009,6 +1014,7 @@ export class Tournament extends Rooms.RoomGame {
 			challengeType: ready.challengeType,
 			tour: this,
 			parentid: this.roomid,
+			lobbyTour: lobbyTour,
 		});
 		if (!room?.battle) throw new Error(`Failed to create battle in ${room}`);
 

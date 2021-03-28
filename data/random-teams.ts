@@ -1944,17 +1944,46 @@ export class RandomTeams {
 	}
 
 	getPokemonPool(type: string, pokemonToExclude: RandomTeamsTypes.RandomSet[] = [], isMonotype = false) {
-		const exclude = pokemonToExclude.map(p => toID(p.species));
 		const pokemonPool = [];
 		for (const id in this.dex.data.FormatsData) {
 			let species = this.dex.getSpecies(id);
-			if (species.gen > this.gen || exclude.includes(species.id)) continue;
+			if (species.gen > this.gen) continue;
 			if (isMonotype) {
 				if (!species.types.includes(type)) continue;
 				if (typeof species.battleOnly === 'string') {
 					species = this.dex.getSpecies(species.battleOnly);
 					if (!species.types.includes(type)) continue;
 				}
+			} else if (formatID === 'gen8uberrandom') {
+				if (species.tier !== 'Uber') continue;
+			} else if (formatID === 'gen8ouuurandom') {
+				if (species.tier !== 'OU' && species.tier !== 'UUBL' && species.tier !== 'UU' && species.tier !== 'RUBL') continue;
+			} else if (formatID === 'gen8runurandom') {
+				if (species.tier !== 'RU' && species.tier !== 'NUBL' && species.tier !== 'NU' && species.tier !== 'PUBL') continue;
+			} else if (formatID === 'gen8purandom') {
+				if (species.tier !== 'PU' && species.tier !== '(PU)') continue;
+			} else if (formatID === 'gen8lcrandom') {
+				if (species.tier !== 'LC') continue;
+			} else if (formatID === 'gen8generationalrandom') {
+				if (species.gen !== teamGeneration) continue;
+			} else if (formatID === 'gen8kantorandom') {
+				if (species.gen !== 1) continue;
+			} else if (formatID === 'gen8johtorandom') {
+				if (species.gen !== 2) continue;
+			} else if (formatID === 'gen8hoennrandom') {
+				if (species.gen !== 3) continue;
+			} else if (formatID === 'gen8sinnohrandom') {
+				if (species.gen !== 4) continue;
+			} else if (formatID === 'gen8unovarandom') {
+				if (species.gen !== 5) continue;
+			} else if (formatID === 'gen8kalosrandom') {
+				if (species.gen !== 6) continue;
+			} else if (formatID === 'gen8alolarandom') {
+				if (species.gen !== 7) continue;
+			} else if (formatID === 'gen8galarrandom') {
+				if (species.gen !== 8) continue;
+			} else if (formatID === 'gen8colorrandom') {
+				if (species.color !== teamColor) continue;
 			}
 			pokemonPool.push(id);
 		}
@@ -1965,11 +1994,26 @@ export class RandomTeams {
 		const seed = this.prng.seed;
 		const ruleTable = this.dex.getRuleTable(this.format);
 		const pokemon: RandomTeamsTypes.RandomSet[] = [];
+		const formatID = this.format.id;
 
 		// For Monotype
 		const isMonotype = ruleTable.has('sametypeclause');
 		const typePool = Object.keys(this.dex.data.TypeChart);
 		const type = this.sample(typePool);
+
+		// For Metronome
+		if (formatID === 'gen8metronome3v3random' || formatID === 'gen8metronome6v6random') {
+			const metronome = this.dex.getMove('Metronome');
+			metronome.pp = 624.375;
+			metronome.noMetronome.push('imprison', 'taunt', 'torment');
+		}
+
+		// For Generational
+		const teamGeneration = Math.floor(Math.random() * 7) + 1;
+
+		// For Color
+		const colorPool = ['Red', 'Blue', 'Yellow', 'Green', 'Black', 'Brown', 'Purple', 'Gray', 'White', 'Pink'];
+		const teamColor = colorPool[this.random(colorPool.length)];
 
 		// PotD stuff
 		const usePotD = global.Config && Config.potd && ruleTable.has('potd');
@@ -1982,7 +2026,7 @@ export class RandomTeams {
 		const typeComboCount: {[k: string]: number} = {};
 		const teamDetails: RandomTeamsTypes.TeamDetails = {};
 
-		const pokemonPool = this.getPokemonPool(type, pokemon, isMonotype);
+		const pokemonPool = this.getPokemonPool(type, pokemon, isMonotype, formatID, teamGeneration, teamColor);
 		while (pokemonPool.length && pokemon.length < 6) {
 			let species = this.dex.getSpecies(this.sampleNoReplace(pokemonPool));
 			if (!species.exists) continue;
@@ -2032,13 +2076,17 @@ export class RandomTeams {
 				continue;
 			}
 
+			if (species.name === 'Unown') continue;
+
 			const tier = species.tier;
 			const types = species.types;
 			const typeCombo = types.slice().sort().join();
 
 			// Limit one Pokemon per tier, two for Monotype
-			if ((tierCount[tier] >= (isMonotype ? 2 : 1)) && !this.randomChance(1, Math.pow(5, tierCount[tier]))) {
-				continue;
+			if (formatID !== 'gen8uberrandom' && formatID !== 'gen8ouuurandom' && formatID !== 'gen8runurandom' && formatID !== 'gen8purandom' && formatID !== 'gen7lcrandom') {
+				if ((tierCount[tier] >= (isMonotype ? 2 : 1)) && !this.randomChance(1, Math.pow(5, tierCount[tier]))) {
+					continue;
+				}
 			}
 
 			if (!isMonotype) {
@@ -2059,8 +2107,17 @@ export class RandomTeams {
 			// The Pokemon of the Day
 			if (potd?.exists && pokemon.length === 1) species = potd;
 
-			const set = this.randomSet(species, teamDetails, pokemon.length === 0,
+			let set = this.randomSet(species, teamDetails, pokemon.length === 0,
 				this.format.gameType !== 'singles', this.dex.getRuleTable(this.format).has('dynamaxclause'));
+
+			if (formatID === 'gen7lcrandom') {
+				set.level = 5;
+			} else if (formatID === 'gen8metronome3v3random' || formatID === 'gen8metronome6v6random') {
+				set.moves = ['Metronome'];
+				if (['Assault Vest'].includes(set.item) > -1) {
+					set.item = 'Leftovers';
+				}
+			}
 
 			// Okay, the set passes, add it to our team
 			pokemon.push(set);

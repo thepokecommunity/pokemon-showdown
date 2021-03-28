@@ -14,6 +14,7 @@ const LadderStore: typeof import('./ladders-remote').LadderStore = (
 
 const SECONDS = 1000;
 const PERIODIC_MATCH_INTERVAL = 60 * SECONDS;
+const SEARCH_COOLDOWN = 3 * 60 * 1000;
 
 import type {ChallengeType} from './room-battle';
 
@@ -453,6 +454,21 @@ class Ladder extends LadderStore {
 		if (oldUserid !== user.id) return;
 		if (!search) return;
 
+		// Ladder search messages
+		if (
+			!user.locked && !Rooms.lobby.isMuted(user) && !Rooms.lobby.disableLadderMessages &&
+			(((Date.now() - user.lastLadderTime) > SEARCH_COOLDOWN) &&
+			user.lastLadderFormat !== this.formatid)
+		) {
+			if (Rooms.lobby) {
+				Rooms.lobby
+					.add('|c|' + user.group + user.name + '|/me is searching for a ' + Dex.getFormat(this.formatid).name + ' battle!')
+					.update();
+			}
+			user.lastLadderFormat = this.formatid;
+			user.lastLadderTime = Date.now();
+		}
+
 		this.addSearch(search, user);
 	}
 
@@ -460,7 +476,6 @@ class Ladder extends LadderStore {
 	 * Verifies whether or not a match made between two users is valid. Returns
 	 */
 	matchmakingOK(search1: BattleReady, search2: BattleReady, user1: User, user2: User) {
-		const formatid = toID(this.formatid);
 		if (!user1 || !user2) {
 			// This should never happen.
 			Monitor.crashlog(new Error(`Matched user ${user1 ? search2.userid : search1.userid} not found`), "The matchmaker");
@@ -481,19 +496,6 @@ class Ladder extends LadderStore {
 
 		// users must not have been matched immediately previously
 		if (user1.lastMatch === user2.id || user2.lastMatch === user1.id) return false;
-
-		// search must be within range
-		let searchRange = 100;
-		const elapsed = Date.now() - Math.min(search1.time, search2.time);
-		if (formatid === 'gen8ou' || formatid === 'gen8oucurrent' ||
-				formatid === 'gen8oususpecttest' || formatid === 'gen8randombattle') {
-			searchRange = 50;
-		}
-
-		searchRange += elapsed / 300; // +1 every .3 seconds
-		if (searchRange > 300) searchRange = 300 + (searchRange - 300) / 10; // +1 every 3 sec after 300
-		if (searchRange > 600) searchRange = 600;
-		if (Math.abs(search1.rating - search2.rating) > searchRange) return false;
 
 		user1.lastMatch = user2.id;
 		user2.lastMatch = user1.id;
