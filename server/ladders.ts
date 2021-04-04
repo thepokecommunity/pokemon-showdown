@@ -462,7 +462,7 @@ class Ladder extends LadderStore {
 		) {
 			if (Rooms.lobby) {
 				Rooms.lobby
-					.add('|c|' + user.group + user.name + '|/me is searching for a ' + Dex.getFormat(this.formatid).name + ' battle!')
+					.add('|c|' + user.getIdentity('lobby') + '|/me is searching for a ' + Dex.getFormat(this.formatid).name + ' battle!')
 					.update();
 			}
 			user.lastLadderFormat = this.formatid;
