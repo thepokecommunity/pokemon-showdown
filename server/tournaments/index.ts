@@ -935,8 +935,12 @@ export class Tournament extends Rooms.RoomGame {
 		}
 
 		to.lastActionTime = Date.now();
-		from.pendingChallenge = {to, team: ready.team, hidden: ready.hidden, inviteOnly: ready.inviteOnly};
-		to.pendingChallenge = {from, team: ready.team, hidden: ready.hidden, inviteOnly: ready.inviteOnly};
+		from.pendingChallenge = {
+			to, team: ready.settings.team, hidden: ready.settings.hidden, inviteOnly: ready.settings.inviteOnly,
+		};
+		to.pendingChallenge = {
+			from, team: ready.settings.team, hidden: ready.settings.hidden, inviteOnly: ready.settings.inviteOnly,
+		};
 		from.sendRoom(`|tournament|update|${JSON.stringify({challenging: to.name})}`);
 		to.sendRoom(`|tournament|update|${JSON.stringify({challenged: from.name})}`);
 
@@ -1000,16 +1004,21 @@ export class Tournament extends Rooms.RoomGame {
 		if (this.room.roomid === 'lobby') {
 			lobbyTour = true;
 		}
-		const room = Rooms.createBattle(this.fullFormat, {
+		const room = Rooms.createBattle({
+			format: this.fullFormat,
 			isPrivate: this.room.settings.isPrivate,
-			p1: from,
-			p1team: challenge.team,
-			p1hidden: challenge.hidden,
-			p1inviteOnly: challenge.inviteOnly,
-			p2: user,
-			p2team: ready.team,
-			p2hidden: ready.hidden,
-			p2inviteOnly: ready.inviteOnly,
+			p1: {
+				user: from,
+				team: challenge.team,
+				hidden: challenge.hidden,
+				inviteOnly: challenge.inviteOnly,
+			},
+			p2: {
+				user,
+				team: ready.settings.team,
+				hidden: ready.settings.hidden,
+				inviteOnly: ready.settings.inviteOnly,
+			},
 			rated: !Ladders.disabled && this.isRated,
 			challengeType: ready.challengeType,
 			tour: this,
@@ -1552,7 +1561,6 @@ const commands: ChatCommands = {
 		rules: 'customrules',
 		customrules(target, room, user, connection, cmd) {
 			room = this.requireRoom();
-			this.checkCan('tournaments', null, room);
 			const tournament = this.requireGame(Tournament);
 			if (cmd === 'banlist') {
 				return this.errorReply('The new syntax is: /tour rules -bannedthing, +un[banned|restricted]thing, *restrictedthing, !removedrule, addedrule');
@@ -1563,6 +1571,7 @@ const commands: ChatCommands = {
 				this.parse('/tour viewrules');
 				return this.sendReplyBox(`<details><summary>Source</summary><code style="white-space: pre-wrap; display: table; tab-size: 3">/tour rules ${tournament.customRules}</code></details>`);
 			}
+			this.checkCan('tournaments', null, room);
 			if (tournament.isTournamentStarted) {
 				return this.errorReply("The custom rules cannot be changed once the tournament has started.");
 			}
