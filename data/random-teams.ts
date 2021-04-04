@@ -1967,6 +1967,7 @@ export class RandomTeams {
 
 	getPokemonPool(type: string, pokemonToExclude: RandomTeamsTypes.RandomSet[] = [], isMonotype = false) {
 		const pokemonPool = [];
+		const formatID = this.format.id;
 		for (const id in this.dex.data.FormatsData) {
 			let species = this.dex.getSpecies(id);
 			if (species.gen > this.gen) continue;
