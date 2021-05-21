@@ -576,7 +576,6 @@ export const Formats: FormatList = [
 
 	{
 		section: "OM of the Month",
-		column: 2,
 	},
 	{
 		name: "[Gen 8] Sketchmons",
@@ -648,7 +647,6 @@ export const Formats: FormatList = [
 
 	{
 		section: "Other Metagames",
-		column: 2,
 	},
 	{
 		name: "[Gen 8] Balanced Hackmons",
