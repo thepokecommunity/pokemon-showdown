@@ -97,6 +97,15 @@ class OtdHandler {
 		const id = settings.id || toID(title).charAt(0) + 'ot' + timeLabel.charAt(0);
 		const handler = new OtdHandler(id, room, settings);
 		otds.set(id, handler);
+		let needsSave = false;
+		for (const winner of handler.winners) {
+			if (winner.timestamp) {
+				winner.time = winner.timestamp;
+				delete winner.timestamp;
+				needsSave = true;
+			}
+		}
+		if (needsSave) handler.save();
 		return handler;
 	}
 
@@ -419,7 +428,7 @@ class OtdHandler {
 		return output;
 	}
 
-	generateWinnerList(context: PageContext) {
+	generateWinnerList(context: Chat.PageContext) {
 		context.title = `${this.id.toUpperCase()} Winners`;
 		let buf = `<div class="pad ladder"><h2>${this.name} of the ${this.timeLabel} Winners</h2>`;
 
@@ -428,12 +437,16 @@ class OtdHandler {
 		const labels = [];
 
 		for (let i = 0; i < this.keys.length; i++) {
-			if (i === 0 || ['song', 'event', 'time', 'link', 'tagline', 'sport', 'country']
+			if (i === 0 || ['song', 'event', 'link', 'tagline', 'sport', 'country']
 				.includes(this.keys[i]) && !(this.keys[i] === 'link' && this.keys.includes('song'))
 			) {
 				columns.push(this.keys[i]);
 				labels.push(this.keyLabels[i]);
 			}
+		}
+		if (!columns.includes('time')) {
+			columns.push('time');
+			labels.push('Timestamp');
 		}
 
 		let content = ``;
@@ -445,11 +458,11 @@ class OtdHandler {
 				if (!val) return '';
 				switch (col) {
 				case 'time':
-					const date = new Date(this.winners[i].time);
+					const date = new Date(parseInt(this.winners[i].time));
 
 					const pad = (num: number) => num < 10 ? '0' + num : num;
 
-					return Utils.html `${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${date.getFullYear()}`;
+					return Utils.html`${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${date.getFullYear()}`;
 				case 'song':
 					if (!this.winners[i].link) return val;
 					// falls through
@@ -483,7 +496,7 @@ function selectHandler(message: string) {
 	return handler;
 }
 
-export const otdCommands: ChatCommands = {
+export const otdCommands: Chat.ChatCommands = {
 	start(target, room, user, connection, cmd) {
 		this.checkChat();
 
@@ -774,8 +787,8 @@ export const otdCommands: ChatCommands = {
 	},
 };
 
-export const pages: PageTable = {};
-export const commands: ChatCommands = {
+export const pages: Chat.PageTable = {};
+export const commands: Chat.ChatCommands = {
 	otd: {
 		create(target, room, user) {
 			room = this.requireRoom();
