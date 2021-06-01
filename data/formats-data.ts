@@ -465,7 +465,7 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		doublesTier: "(DUU)",
 	},
 	persianalola: {
-		randomBattleMoves: ["darkpulse", "hypnosis", "nastyplot", "powergem", "thunderbolt"],
+		randomBattleMoves: ["darkpulse", "hypnosis", "nastyplot", "thunderbolt"],
 		randomBattleLevel: 85,
 		randomDoubleBattleMoves: ["fakeout", "foulplay", "icywind", "partingshot", "protect", "snarl", "taunt"],
 		randomDoubleBattleLevel: 88,
@@ -1848,7 +1848,7 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		randomDoubleBattleMoves: ["extremespeed", "protect", "sacredfire", "snarl", "stompingtantrum", "stoneedge"],
 		randomDoubleBattleLevel: 80,
 		tier: "NUBL",
-		doublesTier: "DOU",
+		doublesTier: "DUU",
 	},
 	suicune: {
 		randomBattleMoves: ["airslash", "calmmind", "icebeam", "rest", "scald", "sleeptalk"],
@@ -2570,7 +2570,7 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		randomDoubleBattleMoves: ["brine", "icebeam", "icywind", "superfang"],
 		randomDoubleBattleLevel: 86,
 		tier: "(PU)",
-		doublesTier: "DUU",
+		doublesTier: "(DUU)",
 	},
 	clamperl: {
 		isNonstandard: "Past",
@@ -3780,7 +3780,7 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		tier: "Illegal",
 	},
 	emolga: {
-		randomBattleMoves: ["airslash", "encore", "energyball", "roost", "thunderbolt", "toxic", "uturn"],
+		randomBattleMoves: ["airslash", "defog", "energyball", "roost", "thunderbolt", "toxic", "uturn"],
 		randomBattleLevel: 88,
 		randomDoubleBattleMoves: ["acrobatics", "helpinghand", "nuzzle", "tailwind", "taunt"],
 		randomDoubleBattleLevel: 88,
@@ -5333,10 +5333,11 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		doublesTier: "(DUU)",
 	},
 	celesteela: {
-		randomBattleMoves: ["airslash", "earthquake", "fireblast", "flashcannon", "leechseed", "protect"],
+		randomBattleMoves: ["airslash", "autotomize", "earthquake", "fireblast", "flashcannon", "leechseed", "protect"],
 		randomBattleLevel: 78,
 		randomDoubleBattleMoves: ["airslash", "autotomize", "earthquake", "fireblast", "flashcannon"],
 		randomDoubleBattleLevel: 78,
+		randomBattleNoDynamaxMoves: ["airslash", "earthquake", "fireblast", "heavyslam", "leechseed", "protect"],
 		tier: "UU",
 		doublesTier: "DOU",
 	},
@@ -5497,6 +5498,8 @@ export const FormatsData: {[k: string]: SpeciesFormatsData} = {
 		doublesTier: "(DUU)",
 	},
 	cinderacegmax: {
+		randomBattleLevel: 76,
+		randomBattleMoves: ["bulkup", "pyroball", "highjumpkick", "suckerpunch"],
 		isNonstandard: "Gigantamax",
 		tier: "AG",
 		doublesTier: "(DUber)",
