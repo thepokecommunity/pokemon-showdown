@@ -1805,6 +1805,17 @@ export class CommandContext extends MessageContext {
 		return htmlContent;
 	}
 
+	/**
+	 * This is to be used for commands that replicate other commands
+	 * (for example, `/pm username, command` or `/msgroom roomid, command`)
+	 * to ensure they do not crash with too many levels of recursion.
+	 */
+	checkRecursion() {
+		if (this.recursionDepth > 5) {
+			throw new Chat.ErrorMessage(`/${this.cmd} - Too much command recursion has occurred.`);
+		}
+	}
+
 	requireRoom(id?: RoomID) {
 		if (!this.room) {
 			throw new Chat.ErrorMessage(`/${this.cmd} - must be used in a chat room, not a ${this.pmTarget ? "PM" : "console"}`);
@@ -2350,7 +2361,12 @@ export const Chat = new class {
 		}
 
 		for (const file of files) {
-			this.loadPlugin(`chat-plugins/${file}`);
+			try {
+				this.loadPlugin(`chat-plugins/${file}`);
+			} catch (e) {
+				Monitor.crashlog(e, "A loading chat plugin");
+				continue;
+			}
 		}
 		Chat.oldPlugins = {};
 		// lower priority should run later
