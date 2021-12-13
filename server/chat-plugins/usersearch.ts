@@ -1,8 +1,8 @@
 import {Utils, FS} from '../../lib';
 
-export const nameList: string[] = JSON.parse(
+export const nameList = new Set<string>(JSON.parse(
 	FS('config/chat-plugins/usersearch.json').readIfExistsSync() || "[]"
-);
+));
 
 const ONLINE_SYMBOL = ` \u25C9 `;
 const OFFLINE_SYMBOL = ` \u25CC `;
@@ -22,6 +22,7 @@ function searchUsernames(target: string, page = false) {
 	};
 	for (const curUser of Users.users.values()) {
 		if (!curUser.id.includes(target) || curUser.id.startsWith('guest')) continue;
+		if (Punishments.isGlobalBanned(curUser)) continue;
 		if (curUser.connected) {
 			results.online.push(`${!page ? ONLINE_SYMBOL : ''} ${curUser.name}`);
 		} else {
@@ -51,19 +52,23 @@ function searchUsernames(target: string, page = false) {
 			if (!results.offline.length && !results.online.length) {
 				buf += `<p>No users found.</p>`;
 			} else {
-				buf += `<div class="ladder pad"><h3>Online users</h3><table><tr><th>Username</th><th>Punish</th></tr>`;
-				for (const username of results.online) {
-					buf += `<tr><td><username>${Utils.escapeHTML(username)}</username></td>`;
-					buf += `<td>${getPunishmentHTML(toID(username), target)}</td></tr>`;
+				if (results.online.length) {
+					buf += `<div class="ladder pad"><h3>Online users</h3><table><tr><th>Username</th><th>Punish</th></tr>`;
+					for (const username of results.online) {
+						// don't need to escape here since we escape above when fetching results
+						buf += Utils.html`<tr><td><username>${username}</username></td>`;
+						buf += `<td>${getPunishmentHTML(toID(username), target)}</td></tr>`;
+					}
+					buf += `</table></div>`;
 				}
-				buf += `</table></div>`;
 				if (results.offline.length && results.online.length) {
 					buf += `<hr />`;
 				}
 				if (results.offline.length) {
 					buf += `<div class="ladder pad"><h3>Offline users</h3><table><tr><th>Username</th><th>Punish</th></tr>`;
 					for (const username of results.offline) {
-						buf += `<tr><td><username>${Utils.escapeHTML(username)}</username></td>`;
+						// don't need to escape here since we escape above when fetching results
+						buf += Utils.html`<tr><td><username>${username}</username></td>`;
 						buf += `<td>${getPunishmentHTML(toID(username), target)}</td></tr>`;
 					}
 				}
@@ -75,7 +80,7 @@ function searchUsernames(target: string, page = false) {
 }
 
 function saveNames() {
-	FS('config/chat-plugins/usersearch.json').writeUpdate(() => JSON.stringify(nameList));
+	FS('config/chat-plugins/usersearch.json').writeUpdate(() => JSON.stringify([...nameList]));
 }
 
 export const commands: Chat.ChatCommands = {
@@ -102,6 +107,7 @@ export const commands: Chat.ChatCommands = {
 	usersearchhelp: [
 		`/usersearch [pattern]: Looks for all names matching the [pattern]. Requires: % @ &`,
 		`Adding "page" to the end of the command, i.e. /usersearchpage OR /uspage will bring up a page.`,
+		`See also /usnames for a staff-curated list of the most commonly searched terms.`,
 	],
 	usnames: 'usersearchnames',
 	usersearchnames: {
@@ -116,7 +122,7 @@ export const commands: Chat.ChatCommands = {
 				return this.errorReply(`Specify at least one term.`);
 			}
 			for (const [i, arg] of targets.entries()) {
-				if (nameList.includes(arg)) {
+				if (nameList.has(arg)) {
 					targets.splice(i, 1);
 					this.errorReply(`Term ${arg} is already on the usersearch term list.`);
 					continue;
@@ -126,12 +132,19 @@ export const commands: Chat.ChatCommands = {
 					this.errorReply(`Term ${arg} is too short for the usersearch term list. Must be more than 3 characters.`);
 					continue;
 				}
+				nameList.add(arg);
 			}
-			nameList.push(...targets);
-			Rooms.get('staff')?.addByUser(user, `${user.name} added ${Chat.count(targets, 'terms')} to the usersearch name list.`);
+			if (!targets.length) {
+				// fuck you too, "mia added 0 term to the usersearch name list"
+				return this.errorReply(`No terms could be added.`);
+			}
+			const count = Chat.count(targets, 'terms');
+			Rooms.get('staff')?.addByUser(
+				user, `${user.name} added the ${count} "${targets.join(', ')}" to the usersearch name list.`
+			);
 			this.globalModlog(`USERSEARCH ADD`, null, targets.join(', '));
 			if (!room || room.roomid !== 'staff') {
-				this.sendReply(`Added ${Chat.count(targets, 'terms')} to the usersearch name list.`);
+				this.sendReply(`You added the ${count} "${targets.join(', ')}" to the usersearch name list.`);
 			}
 			saveNames();
 		},
@@ -142,22 +155,32 @@ export const commands: Chat.ChatCommands = {
 				return this.errorReply(`Specify at least one term.`);
 			}
 			for (const [i, arg] of targets.entries()) {
-				const idx = nameList.indexOf(arg);
-				if (idx < 0) {
+				if (!nameList.has(arg)) {
 					targets.splice(i, 1);
 					this.errorReply(`${arg} is not in the usersearch name list, and has been skipped.`);
 					continue;
 				}
-				nameList.splice(idx, 1);
+				nameList.delete(arg);
 			}
-			Rooms.get('staff')?.addByUser(user, `${user.name} removed ${Chat.count(targets, 'terms')} from the usersearch name list.`);
+			if (!targets.length) {
+				return this.errorReply(`No terms could be removed.`);
+			}
+			const count = Chat.count(targets, 'terms');
+			Rooms.get('staff')?.addByUser(
+				user, `${user.name} removed the ${count} "${targets.join(', ')}" from the usersearch name list.`
+			);
 			this.globalModlog(`USERSEARCH REMOVE`, null, targets.join(', '));
 			if (!room || room.roomid !== 'staff') {
-				this.sendReply(`You removed ${Chat.count(targets, 'terms')} from the usersearch name list.`);
+				this.sendReply(`You removed the ${count} "${targets.join(', ')}"" from the usersearch name list.`);
 			}
 			saveNames();
 		},
 	},
+	usnameshelp: [
+		`/usnames add [...terms]: Adds the given [terms] to the usersearch name list. Requires: % @ &`,
+		`/usnames remove [...terms]: Removes the given [terms] from the usersearch name list. Requires: % @ &`,
+		`/usnames OR /usnames list: Shows the usersearch name list.`,
+	],
 };
 
 export const pages: Chat.PageTable = {
@@ -169,7 +192,7 @@ export const pages: Chat.PageTable = {
 			let buf = `<div class="pad"><strong>Usersearch term list</strong>`;
 			buf += `<button style="float:right;" class="button" name="send" value="/uspage"><i class="fa fa-refresh"></i> Refresh</button>`;
 			buf += `<hr />`;
-			if (!nameList.length) {
+			if (!nameList.size) {
 				buf += `None found.`;
 				return buf;
 			}
@@ -177,7 +200,7 @@ export const pages: Chat.PageTable = {
 			for (const curUser of Users.users.values()) {
 				for (const term of nameList) {
 					if (curUser.id.includes(term)) {
-						if (!sorted[term]) sorted[term] = 0;
+						if (!(term in sorted)) sorted[term] = 0;
 						sorted[term]++;
 					}
 				}

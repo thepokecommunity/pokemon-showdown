@@ -243,14 +243,14 @@ export class Side {
 	allies(all?: boolean) {
 		// called during the first switch-in, so `active` can still contain nulls at this point
 		let allies = this.activeTeam().filter(ally => ally);
-		if (!all) allies = allies.filter(ally => !ally.fainted);
+		if (!all) allies = allies.filter(ally => !!ally.hp);
 
 		return allies;
 	}
 	foes(all?: boolean) {
 		if (this.battle.gameType === 'freeforall') {
 			return this.battle.sides.map(side => side.active[0])
-				.filter(pokemon => pokemon && pokemon.side !== this && (all || !pokemon.fainted));
+				.filter(pokemon => pokemon && pokemon.side !== this && (all || !!pokemon.hp));
 		}
 		return this.foe.allies(all);
 	}
@@ -651,9 +651,8 @@ export class Side {
 			return this.emitChoiceError(`Can't switch: You sent more choices than unfainted Pokémon`);
 		}
 		const pokemon = this.active[index];
-		const autoChoose = !slotText;
 		let slot;
-		if (autoChoose) {
+		if (!slotText) {
 			if (this.requestState !== 'switch') {
 				return this.emitChoiceError(`Can't switch: You need to select a Pokémon to switch in`);
 			}
@@ -661,7 +660,7 @@ export class Side {
 			slot = this.active.length;
 			while (this.choice.switchIns.has(slot) || this.pokemon[slot].fainted) slot++;
 		} else {
-			slot = parseInt(slotText!) - 1;
+			slot = parseInt(slotText) - 1;
 		}
 		if (isNaN(slot) || slot < 0) {
 			// maybe it's a name/species id!

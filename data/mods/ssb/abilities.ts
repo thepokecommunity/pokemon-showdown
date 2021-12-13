@@ -1472,7 +1472,7 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 				if (source.species.baseSpecies !== 'Chandelure') return;
 				if (source.set.shiny) return;
 				source.m.nowShiny = true;
-				this.add(`c|${getName('PartMan')}|THE LIGHT! IT BURNS!`);
+				this.add(`c:|${Math.floor(Date.now() / 1000)}|${getName('PartMan')}|THE LIGHT! IT BURNS!`);
 				changeSet(this, source, ssbSets['PartMan-Shiny']);
 			}
 		},
@@ -2037,7 +2037,7 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 			if (!cosplayFormes.includes(target.species.id) || target.transformed) {
 				return;
 			}
-			const hitSub = target.volatiles['substitute'] && !move.flags['authentic'] && !(move.infiltrates && this.gen >= 6);
+			const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub'] && !(move.infiltrates && this.gen >= 6);
 			if (hitSub) return;
 
 			if (!target.runImmunity(move.type)) return;
@@ -2051,7 +2051,7 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 			if (!cosplayFormes.includes(target.species.id) || target.transformed) {
 				return;
 			}
-			const hitSub = target.volatiles['substitute'] && !move.flags['authentic'] && !(move.infiltrates && this.gen >= 6);
+			const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub'] && !(move.infiltrates && this.gen >= 6);
 			if (hitSub) return;
 
 			if (!target.runImmunity(move.type)) return;

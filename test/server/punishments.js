@@ -7,7 +7,7 @@
  */
 const assert = require('../assert');
 const {makeUser, makeConnection} = require('../users-utils');
-const {Punishments} = require('../../.server-dist/punishments');
+const {Punishments} = require('../../server/punishments');
 
 const TEST_PUNISHMENT_DURATION = 1000; // 1 second
 
@@ -64,7 +64,7 @@ describe("Punishments", () => {
 	});
 });
 
-describe('broader, more integrated Punishments tests', () => {
+describe('broader, more integrated Punishments tests', function () {
 	before(() => {
 		this.room = Rooms.get('lobby');
 
@@ -101,16 +101,16 @@ describe('broader, more integrated Punishments tests', () => {
 		});
 
 		it.skip('should expire on its own', done => {
-			assert(Punishments.hasRoomPunishType(this.room, 'roombanmeplease', 'ROOMBAN'));
+			assert(Punishments.hasRoomPunishType(this.room, 'roombanmeplease', 'ROOMBAN'), `should be in effect`);
 
 			setTimeout(() => {
-				assert(!Punishments.hasRoomPunishType(this.room, 'roombanmeplease', 'ROOMBAN'));
+				assert(!Punishments.hasRoomPunishType(this.room, 'roombanmeplease', 'ROOMBAN'), `should have expired`);
 				done();
 			}, TEST_PUNISHMENT_DURATION);
 		});
 	});
 
-	describe('locks', () => {
+	describe('locks (network) (slow)', () => {
 		before(() => {
 			this.user = makeUser("Lock Me Please", '127.0.0.3');
 			this.connection = this.user.connections[0];
@@ -170,7 +170,7 @@ describe('broader, more integrated Punishments tests', () => {
 		});
 	});
 
-	describe('namelocks', () => {
+	describe('namelocks (network) (slow)', () => {
 		before(() => {
 			this.user = makeUser("Namelock Me Please", '127.0.0.6');
 			this.connection = this.user.connections[0];
@@ -201,7 +201,7 @@ describe('broader, more integrated Punishments tests', () => {
 		});
 	});
 
-	describe('global bans', () => {
+	describe('global bans (network) (slow)', () => {
 		before(() => {
 			this.user = makeUser("Ban Me Please", '127.0.0.7');
 			this.connection = this.user.connections[0];

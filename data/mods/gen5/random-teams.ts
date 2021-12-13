@@ -320,6 +320,7 @@ export class RandomGen5Teams extends RandomGen6Teams {
 		isLead: boolean
 	): string | undefined {
 		if (species.requiredItem) return species.requiredItem;
+		if (species.requiredItems) return this.sample(species.requiredItems);
 
 		if (species.name === 'Marowak') return 'Thick Club';
 		if (species.name === 'Farfetch\u2019d') return 'Stick';
@@ -452,7 +453,7 @@ export class RandomGen5Teams extends RandomGen6Teams {
 			forme = this.sample([species.name].concat(species.cosmeticFormes));
 		}
 
-		const movePool = (species.randomBattleMoves || Object.keys(this.dex.data.Learnsets[species.id]!.learnset!)).slice();
+		const movePool = (species.randomBattleMoves || Object.keys(this.dex.species.getLearnset(species.id)!)).slice();
 		const rejectedPool = [];
 		const moves = new Set<string>();
 		let ability = '';
@@ -549,11 +550,12 @@ export class RandomGen5Teams extends RandomGen6Teams {
 					cull = true;
 				}
 
-				const runEnforcementChecker = (checkerName: string) => (
-					this.moveEnforcementCheckers[checkerName]?.(
+				const runEnforcementChecker = (checkerName: string) => {
+					if (!this.moveEnforcementCheckers[checkerName]) return false;
+					return this.moveEnforcementCheckers[checkerName](
 						movePool, moves, abilities, types, counter, species as Species, teamDetails
-					)
-				);
+					);
+				};
 				// Pokemon should have moves that benefit their Type/Ability/Weather, as well as moves required by its forme
 				if (
 					!cull &&

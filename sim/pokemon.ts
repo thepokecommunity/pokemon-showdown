@@ -337,7 +337,7 @@ export class Pokemon {
 		this.status = '';
 		this.statusState = {};
 		this.volatiles = {};
-		this.showCure = false;
+		this.showCure = undefined;
 
 		if (!this.set.evs) {
 			this.set.evs = {hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0};
@@ -562,7 +562,7 @@ export class Pokemon {
 			stat = this.battle.runEvent('Modify' + statTable[statName], this, null, null, stat);
 		}
 
-		if (statName === 'spe' && stat > 10000) stat = 10000;
+		if (statName === 'spe' && stat > 10000 && !this.battle.format.battle?.trunc) stat = 10000;
 		return stat;
 	}
 
