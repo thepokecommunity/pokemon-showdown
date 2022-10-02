@@ -10,6 +10,8 @@
 import {Dex, toID} from './dex';
 import {Utils} from '../lib';
 import {Tags} from '../data/tags';
+import {Teams} from './teams';
+import {PRNG} from './prng';
 
 /**
  * Describes a possible way to get a pokemon. Is not exhaustive!
@@ -234,6 +236,16 @@ export class TeamValidator {
 				return [
 					`This format doesn't let you use your own team.`,
 					`If you're not using a custom client, please report this as a bug. If you are, remember to use \`/utm null\` before starting a game in this format.`,
+				];
+			}
+			const testTeamSeed = PRNG.generateSeed();
+			try {
+				const testTeamGenerator = Teams.getGenerator(format, testTeamSeed);
+				testTeamGenerator.getTeam(options); // Throws error if generation fails
+			} catch (e) {
+				return [
+					`${format.name}'s team generator (${format.team}) failed using these rules and seed (${testTeamSeed}):-`,
+					`${e}`,
 				];
 			}
 			return null;
@@ -515,6 +527,10 @@ export class TeamValidator {
 				tierSpecies = dex.species.get('Kyogre-Primal');
 			} else if (canMegaEvo && species.id === 'rayquaza' && set.moves.map(toID).includes('dragonascent' as ID)) {
 				tierSpecies = dex.species.get('Rayquaza-Mega');
+			} else if (item.id === 'rustedsword' && species.id === 'zacian') {
+				tierSpecies = dex.species.get('Zacian-Crowned');
+			} else if (item.id === 'rustedshield' && species.id === 'zamazenta') {
+				tierSpecies = dex.species.get('Zamazenta-Crowned');
 			}
 		}
 
@@ -524,6 +540,9 @@ export class TeamValidator {
 		problem = this.checkItem(set, item, setHas);
 		if (problem) problems.push(problem);
 		if (ruleTable.has('obtainablemisc')) {
+			if (dex.gen === 4 && item.id === 'griseousorb' && species.num !== 487) {
+				problems.push(`${set.name} cannot hold the Griseous Orb.`, `(In Gen 4, only Giratina could hold the Griseous Orb).`);
+			}
 			if (dex.gen <= 1) {
 				if (item.id) {
 					// no items allowed
@@ -681,7 +700,7 @@ export class TeamValidator {
 		}
 
 		let isFromRBYEncounter = false;
-		if (this.gen === 1 && !this.ruleTable.has('allowtradeback')) {
+		if (this.gen === 1 && ruleTable.has('obtainablemisc') && !this.ruleTable.has('allowtradeback')) {
 			let lowestEncounterLevel;
 			for (const encounter of learnsetSpecies.encounters || []) {
 				if (encounter.generation !== 1) continue;
@@ -698,29 +717,37 @@ export class TeamValidator {
 				isFromRBYEncounter = true;
 			}
 		}
-		if (!isFromRBYEncounter && ruleTable.has('obtainablemisc') && set.level < (species.evoLevel || 0)) {
+		if (!isFromRBYEncounter && ruleTable.has('obtainablemisc')) {
 			// FIXME: Event pokemon given at a level under what it normally can be attained at gives a false positive
-			problems.push(`${name} must be at least level ${species.evoLevel} to be evolved.`);
+			let evoSpecies = species;
+			while (evoSpecies.prevo) {
+				if (set.level < (evoSpecies.evoLevel || 0)) {
+					problems.push(`${name} must be at least level ${evoSpecies.evoLevel} to be evolved.`);
+					break;
+				}
+				evoSpecies = dex.species.get(evoSpecies.prevo);
+			}
 		}
 
-		if (ruleTable.has('obtainablemoves') && species.id === 'keldeo' && set.moves.includes('secretsword') &&
-			this.minSourceGen > 5 && dex.gen <= 7) {
-			problems.push(`${name} has Secret Sword, which is only compatible with Keldeo-Ordinary obtained from Gen 5.`);
-		}
-		const requiresGen3Source = setSources.maxSourceGen() <= 3;
-		if (requiresGen3Source && dex.abilities.get(set.ability).gen === 4 && !species.prevo && dex.gen <= 5) {
-			// Ability Capsule allows this in Gen 6+
-			problems.push(`${name} has a Gen 4 ability and isn't evolved - it can't use moves from Gen 3.`);
-		}
-		const canUseAbilityPatch = dex.gen >= 8 && format.mod !== 'gen8dlc1';
-		if (setSources.isHidden && !canUseAbilityPatch && setSources.maxSourceGen() < 5) {
-			problems.push(`${name} has a Hidden Ability - it can't use moves from before Gen 5.`);
-		}
-		if (
-			species.maleOnlyHidden && setSources.isHidden && setSources.sourcesBefore < 5 &&
-			setSources.sources.every(source => source.charAt(1) === 'E')
-		) {
-			problems.push(`${name} has an unbreedable Hidden Ability - it can't use egg moves.`);
+		if (ruleTable.has('obtainablemoves')) {
+			if (species.id === 'keldeo' && set.moves.includes('secretsword') && this.minSourceGen > 5 && dex.gen <= 7) {
+				problems.push(`${name} has Secret Sword, which is only compatible with Keldeo-Ordinary obtained from Gen 5.`);
+			}
+			const requiresGen3Source = setSources.maxSourceGen() <= 3;
+			if (requiresGen3Source && dex.abilities.get(set.ability).gen === 4 && !species.prevo && dex.gen <= 5) {
+				// Ability Capsule allows this in Gen 6+
+				problems.push(`${name} has a Gen 4 ability and isn't evolved - it can't use moves from Gen 3.`);
+			}
+			const canUseAbilityPatch = dex.gen >= 8 && format.mod !== 'gen8dlc1';
+			if (setSources.isHidden && !canUseAbilityPatch && setSources.maxSourceGen() < 5) {
+				problems.push(`${name} has a Hidden Ability - it can't use moves from before Gen 5.`);
+			}
+			if (
+				species.maleOnlyHidden && setSources.isHidden && setSources.sourcesBefore < 5 &&
+				setSources.sources.every(source => source.charAt(1) === 'E')
+			) {
+				problems.push(`${name} has an unbreedable Hidden Ability - it can't use egg moves.`);
+			}
 		}
 
 		if (teamHas) {
@@ -1088,6 +1115,9 @@ export class TeamValidator {
 		let eggGroups = species.eggGroups;
 		if (species.id === 'nidoqueen' || species.id === 'nidorina') {
 			eggGroups = dex.species.get('nidoranf').eggGroups;
+		} else if (species.id === 'shedinja') {
+			// Shedinja and Nincada are different Egg groups; Shedinja itself is genderless
+			eggGroups = dex.species.get('nincada').eggGroups;
 		} else if (dex !== this.dex) {
 			// Gen 1 tradeback; grab the egg groups from Gen 2
 			eggGroups = dex.species.get(species.id).eggGroups;
@@ -1284,10 +1314,10 @@ export class TeamValidator {
 		const crowned: {[k: string]: string} = {
 			'Zacian-Crowned': 'behemothblade', 'Zamazenta-Crowned': 'behemothbash',
 		};
-		if (set.species in crowned) {
-			const ironHead = set.moves.map(toID).indexOf('ironhead' as ID);
-			if (ironHead >= 0) {
-				set.moves[ironHead] = crowned[set.species];
+		if (species.name in crowned) {
+			const behemothMove = set.moves.map(toID).indexOf(crowned[species.name] as ID);
+			if (behemothMove >= 0) {
+				set.moves[behemothMove] = 'ironhead';
 			}
 		}
 		return problems;
@@ -1296,6 +1326,14 @@ export class TeamValidator {
 	checkSpecies(set: PokemonSet, species: Species, tierSpecies: Species, setHas: {[k: string]: true}) {
 		const dex = this.dex;
 		const ruleTable = this.ruleTable;
+
+		// https://www.smogon.com/forums/posts/8659168
+		if (
+			(tierSpecies.id === 'zamazentacrowned' && species.id === 'zamazenta') ||
+			(tierSpecies.id === 'zaciancrowned' && species.id === 'zacian')
+		) {
+			species = tierSpecies;
+		}
 
 		setHas['pokemon:' + species.id] = true;
 		setHas['basepokemon:' + toID(species.baseSpecies)] = true;
@@ -1322,6 +1360,11 @@ export class TeamValidator {
 		const doublesTier = tierSpecies.doublesTier === '(DUU)' ? 'DNU' : tierSpecies.doublesTier;
 		const doublesTierTag = 'pokemontag:' + toID(doublesTier);
 		setHas[doublesTierTag] = true;
+
+		const ndTier = tierSpecies.natDexTier === '(PU)' ? 'ZU' :
+			tierSpecies.natDexTier === '(NU)' ? 'PU' : tierSpecies.natDexTier;
+		const ndTierTag = 'pokemontag:nd' + toID(ndTier);
+		setHas[ndTierTag] = true;
 
 		// Only pokemon that can gigantamax should have the Gmax flag
 		if (!tierSpecies.canGigantamax && set.gigantamax) {
@@ -1532,6 +1575,19 @@ export class TeamValidator {
 		const ruleTable = this.ruleTable;
 
 		setHas['ability:' + ability.id] = true;
+
+		if (this.format.id.startsWith('gen8pokebilities')) {
+			const species = dex.species.get(set.species);
+			const unSeenAbilities = Object.keys(species.abilities)
+				.filter(key => key !== 'S' && (key !== 'H' || !species.unreleasedHidden))
+				.map(key => species.abilities[key as "0" | "1" | "H" | "S"]);
+
+			if (ability.id !== this.toID(species.abilities['S'])) {
+				for (const abilityName of unSeenAbilities) {
+					setHas['ability:' + toID(abilityName)] = true;
+				}
+			}
+		}
 
 		let banReason = ruleTable.check('ability:' + ability.id);
 		if (banReason) {
@@ -2150,7 +2206,7 @@ export class TeamValidator {
 		// different learnsets. To prevent a leak, we make them show up as their
 		// base forme, but hardcode their learnsets into Rockruff-Dusk and
 		// Greninja-Ash
-		if ((species.baseSpecies === 'Gastrodon' || species.baseSpecies === 'Pumpkaboo') && species.forme) {
+		if (['Gastrodon', 'Pumpkaboo', 'Sinistea'].includes(species.baseSpecies) && species.forme) {
 			return this.dex.species.get(species.baseSpecies);
 		} else if (species.name === 'Lycanroc-Dusk') {
 			return this.dex.species.get('Rockruff-Dusk');

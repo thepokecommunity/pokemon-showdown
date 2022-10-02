@@ -376,6 +376,7 @@ export const commands: Chat.ChatCommands = {
 		} else if (curRoom.settings.isPrivate === 'hidden' || curRoom.settings.isPrivate === 'voice') {
 			buffer.push(`${curRoom.title} is a hidden room, so global auth with no relevant roomauth will have authority in this room.`);
 		}
+		buffer.push(`Names in **bold** are online.`);
 		if (targetRoom !== room) buffer.unshift(`${targetRoom.title} room auth:`);
 		connection.popup(`${buffer.join("\n\n")}${userLookup}`);
 	},
@@ -1000,9 +1001,12 @@ export const commands: Chat.ChatCommands = {
 		this.checkCan('lock');
 
 		const userid = toID(target);
-		const punishment = Punishments.userids.getByType(userid, 'LOCK');
+		if (userid.startsWith('guest')) {
+			return this.errorReply(`You cannot unlock the guest userid - provide their original username instead.`);
+		}
+		const punishment = Punishments.userids.getByType(userid, 'LOCK') || Punishments.userids.getByType(userid, 'NAMELOCK');
 		if (!punishment) return this.errorReply("This name isn't locked.");
-		if (punishment.id === userid) {
+		if (punishment.id === userid || Users.get(userid)?.previousIDs.includes(punishment.id as ID)) {
 			return this.errorReply(`"${userid}" was specifically locked by a staff member (check the global modlog). Use /unlock if you really want to unlock this name.`);
 		}
 		Punishments.userids.delete(userid);
@@ -1328,14 +1332,23 @@ export const commands: Chat.ChatCommands = {
 		}
 		this.checkCan('receiveauthmessages', null, room);
 		target = target.replace(/\n/g, "; ");
-		const targetUserid = toID(/\[([^\]]+)\]/.exec(target)?.[1]) || null;
+		const targeted = /\[([^\]]+)\]/.exec(target)?.[1] || null;
+		let targetUserid, targetIP;
+
+		if (targeted) {
+			if (IPTools.ipRegex.test(targeted)) {
+				targetIP = targeted;
+			} else {
+				targetUserid = toID(targeted);
+			}
+		}
 		if (
 			['staff', 'upperstaff'].includes(room.roomid) ||
 			(Rooms.Modlog.getSharedID(room.roomid) && user.can('modlog'))
 		) {
-			this.globalModlog('NOTE', targetUserid, target);
+			this.globalModlog('NOTE', targetUserid || null, target, targetIP);
 		} else {
-			this.modlog('NOTE', targetUserid, target);
+			this.modlog('NOTE', targetUserid || null, target);
 		}
 
 		this.privateModAction(`${user.name} notes: ${target}`);
@@ -1500,9 +1513,11 @@ export const commands: Chat.ChatCommands = {
 			Users.globalAuth.setSection(userid, section);
 			this.addGlobalModAction(`${name} was appointed Section Leader of ${RoomSections.sectionNames[section]} by ${user.name}.`);
 			this.globalModlog(`SECTION LEADER`, userid, section);
-			if (targetUser && !Users.globalAuth.atLeast(targetUser, Users.SECTIONLEADER_SYMBOL)) {
+			if (targetUser) {
 				// do not use global /forcepromote
-				this.parse(`/globalsectionleader ${userid}`);
+				if (!Users.globalAuth.atLeast(targetUser, Users.SECTIONLEADER_SYMBOL)) {
+					this.parse(`/globalsectionleader ${userid}`);
+				}
 			} else {
 				this.sendReply(`User ${userid} is offline and unrecognized, and so can't be globally promoted.`);
 			}
@@ -1835,11 +1850,12 @@ export const commands: Chat.ChatCommands = {
 	forcenamelock: 'namelock',
 	weeknamelock: 'namelock',
 	wnl: 'namelock',
+	fwnl: 'namelock',
 	forceweeknamelock: 'namelock',
 	async namelock(target, room, user, connection, cmd) {
 		if (!target) return this.parse('/help namelock');
 		const week = cmd.includes('w');
-		const force = cmd.includes('force');
+		const force = cmd.includes('f');
 
 		const {targetUser, inputUsername, targetUsername, rest: reason} = this.splitUser(target);
 		const userid = toID(targetUsername);
@@ -1855,6 +1871,16 @@ export const commands: Chat.ChatCommands = {
 		this.checkCan('forcerename', userid);
 		if (targetUser?.namelocked && !week) {
 			return this.errorReply(`User '${targetUser.name}' is already namelocked.`);
+		}
+		if (!force && !week) {
+			const existingPunishments = Punishments.search(userid);
+			for (const [,, punishment] of existingPunishments) {
+				if (punishment.type === 'LOCK' && (punishment.expireTime - Date.now()) > (2 * DAY)) {
+					this.errorReply(`User '${userid}' is already normally locked for more than 2 days.`);
+					this.errorReply(`Use /weeknamelock to namelock them instead, so you don't decrease the existing punishment.`);
+					return this.errorReply(`If you really need to override this, use /forcenamelock.`);
+				}
+			}
 		}
 		const {privateReason, publicReason} = this.parseSpoiler(reason);
 		const reasonText = publicReason ? ` (${publicReason})` : `.`;
@@ -2107,17 +2133,16 @@ export const commands: Chat.ChatCommands = {
 		if (Punishments.isBattleBanned(targetUser)) {
 			return this.errorReply(`User '${targetUser.name}' is already banned from battling.`);
 		}
-		const reasonText = reason ? ` (${reason})` : `.`;
-		this.privateGlobalModAction(`${targetUser.name} was banned from starting new battles by ${user.name}${reasonText}`);
+		this.privateGlobalModAction(`${targetUser.name} was banned from starting new battles by ${user.name} (${reason})`);
 
 		if (targetUser.trusted) {
 			Monitor.log(`[CrisisMonitor] Trusted user ${targetUser.name} was banned from battling by ${user.name}, and should probably be demoted.`);
 		}
 
-		this.globalModlog("BATTLEBAN", targetUser, reasonText);
+		this.globalModlog("BATTLEBAN", targetUser, reason);
 		Ladders.cancelSearches(targetUser);
 		await Punishments.battleban(targetUser, null, null, reason);
-		targetUser.popup(`|modal|${user.name} has prevented you from starting new battles for 2 days${reasonText}`);
+		targetUser.popup(`|modal|${user.name} has prevented you from starting new battles for 2 days (${reason})`);
 
 		// Automatically upload replays as evidence/reference to the punishment
 		if (room.battle) this.parse('/savereplay forpunishment');

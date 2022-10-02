@@ -57,6 +57,17 @@ export const Scripts: ModdedBattleScriptsData = {
 			}
 			return changed;
 		},
+		clearBoosts() {
+			let i: BoostID;
+			for (i in this.boosts) {
+				this.boosts[i] = 0;
+				// Recalculate the modified stat
+				if (i === 'evasion' || i === 'accuracy') continue;
+				let stat = this.species.baseStats[i];
+				stat = Math.floor(Math.floor(2 * stat + this.set.ivs[i] + Math.floor(this.set.evs[i] / 4)) * this.level / 100 + 5);
+				this.modifiedStats![i] = this.storedStats[i] = Math.floor(stat);
+			}
+		},
 	},
 	actions: {
 		// This function is the main one when running a move.
@@ -456,8 +467,9 @@ export const Scripts: ModdedBattleScriptsData = {
 					return false;
 				}
 				if (moveData.boosts && target.hp) {
-					if (!this.battle.boost(moveData.boosts, target, pokemon, move)) {
-						this.battle.add('-fail', target);
+					const willBoost = this.battle.boost(moveData.boosts, target, pokemon, move);
+					if (!willBoost) {
+						if (willBoost === false) this.battle.add('-fail', target);
 						return false;
 					}
 					didSomething = true;
@@ -651,7 +663,7 @@ export const Scripts: ModdedBattleScriptsData = {
 			if (!isCrit) {
 				// In gen 1, the critical chance is based on speed.
 				// First, we get the base speed, divide it by 2 and floor it. This is our current crit chance.
-				let critChance = Math.floor(source.species.baseStats['spe'] / 2);
+				let critChance = Math.floor(this.dex.species.get(source.set.species).baseStats['spe'] / 2);
 
 				// Now we check for focus energy volatile.
 				if (source.volatiles['focusenergy']) {

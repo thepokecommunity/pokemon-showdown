@@ -317,6 +317,10 @@ export class RuleTable extends Map<string, string> {
 			throw new Error(`maxForcedLevel is now a rule: "Adjust Level Down = NUMBER"`);
 		}
 	}
+
+	hasComplexBans() {
+		return (this.complexBans?.length > 0) || (this.complexTeamBans?.length > 0);
+	}
 }
 
 export class Format extends BasicEffect implements Readonly<BasicEffect> {
@@ -409,6 +413,7 @@ export class Format extends BasicEffect implements Readonly<BasicEffect> {
 
 	constructor(data: AnyObject) {
 		super(data);
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		data = this;
 
 		this.mod = Utils.getString(data.mod) || 'gen8';
@@ -828,7 +833,6 @@ export class DexFormats {
 		case '-':
 		case '*':
 		case '+':
-			if (format?.team) throw new Error(`We don't currently support bans in generated teams`);
 			if (rule.slice(1).includes('>') || rule.slice(1).includes('+')) {
 				let buf = rule.slice(1);
 				const gtIndex = buf.lastIndexOf('>');

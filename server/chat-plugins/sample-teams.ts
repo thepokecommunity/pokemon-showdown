@@ -368,23 +368,23 @@ export const commands: Chat.ChatCommands = {
 		},
 		add(target, room, user) {
 			const [formatid, category, teamName, team] = target.split(',');
-			if (!(formatid && category && teamName && team)) return this.parse('/j view-sampleteams-add');
-			const packedTeam = SampleTeams.addTeam(user, formatid, teamName, team, category.trim() || "uncategorized");
+			if (!(formatid && category?.trim() && teamName && team)) return this.parse('/j view-sampleteams-add');
+			const packedTeam = SampleTeams.addTeam(user, formatid, teamName, team, category);
 			SampleTeams.modlog(
-				this, formatid, 'ADDTEAM', `${category || "uncategorized"}: ${teamName}: ${packedTeam}`,
-				`${user.name} added a team for ${formatid}${category ? ` in the ${category} category` : ''}.`
+				this, formatid, 'ADDTEAM', `${category}: ${teamName}: ${packedTeam}`,
+				`${user.name} added a team for ${formatid} in the ${category} category.`
 			);
-			this.sendReply(`Added a team for ${formatid} ${category ? ` in the ${category} category` : ''}.`);
+			this.sendReply(`Added a team for ${formatid} in the ${category} category.`);
 		},
 		remove(target, room, user) {
 			const [formatid, category, teamName] = target.split(',').map(x => x.trim());
 			if (!(formatid && category && teamName)) return this.parse(`/help sampleteams`);
-			const team = SampleTeams.removeTeam(user, formatid, toID(teamName), category || 'uncategorized');
+			const team = SampleTeams.removeTeam(user, formatid, toID(teamName), category);
 			SampleTeams.modlog(
-				this, formatid, 'REMOVETEAM', `${category || "uncategorized"}: ${teamName}: ${team}`,
-				`${user.name} removed a team from ${formatid}${category ? ` in the ${category} category` : ''}.`
+				this, formatid, 'REMOVETEAM', `${category}: ${teamName}: ${team}`,
+				`${user.name} removed a team from ${formatid} in the ${category} category.`
 			);
-			this.sendReply(`Removed a team from ${formatid} ${category ? ` in the ${category} category` : ''}.`);
+			this.sendReply(`Removed a team from ${formatid} in the ${category} category.`);
 		},
 		whitelist: {
 			add(target, room, user) {

@@ -120,6 +120,8 @@ export class BattleActions {
 			oldActive.isActive = false;
 			oldActive.isStarted = false;
 			oldActive.usedItemThisTurn = false;
+			oldActive.statsRaisedThisTurn = false;
+			oldActive.statsLoweredThisTurn = false;
 			oldActive.position = pokemon.position;
 			pokemon.position = pos;
 			side.pokemon[pokemon.position] = pokemon;
@@ -165,7 +167,17 @@ export class BattleActions {
 	}
 	runSwitch(pokemon: Pokemon) {
 		this.battle.runEvent('Swap', pokemon);
-		this.battle.runEvent('SwitchIn', pokemon);
+
+		if (this.battle.gen >= 5) {
+			this.battle.runEvent('SwitchIn', pokemon);
+		}
+
+		this.battle.runEvent('EntryHazard', pokemon);
+
+		if (this.battle.gen <= 4) {
+			this.battle.runEvent('SwitchIn', pokemon);
+		}
+
 		if (this.battle.gen <= 2 && !pokemon.side.faintedThisTurn && pokemon.draggedIn !== this.battle.turn) {
 			this.battle.runEvent('AfterSwitchInSelf', pokemon);
 		}
@@ -281,6 +293,7 @@ export class BattleActions {
 			this.battle.add('-zpower', pokemon);
 			pokemon.side.zMoveUsed = true;
 		}
+
 		const moveDidSomething = this.useMove(baseMove, pokemon, target, sourceEffect, zMove, maxMove);
 		this.battle.lastSuccessfulMoveThisTurn = moveDidSomething ? this.battle.activeMove && this.battle.activeMove.id : null;
 		if (this.battle.activeMove) move = this.battle.activeMove;
@@ -425,7 +438,8 @@ export class BattleActions {
 			target = targets[targets.length - 1]; // in case of redirection
 		}
 
-		if (!sourceEffect || sourceEffect.id === 'pursuit') {
+		const callerMoveForPressure = sourceEffect && (sourceEffect as ActiveMove).pp ? sourceEffect as ActiveMove : null;
+		if (!sourceEffect || callerMoveForPressure || sourceEffect.id === 'pursuit') {
 			let extraPP = 0;
 			for (const source of pressureTargets) {
 				const ppDrop = this.battle.runEvent('DeductPP', source, pokemon, move);
@@ -434,7 +448,7 @@ export class BattleActions {
 				}
 			}
 			if (extraPP > 0) {
-				pokemon.deductPP(moveOrMoveName, extraPP);
+				pokemon.deductPP(callerMoveForPressure || moveOrMoveName, extraPP);
 			}
 		}
 
@@ -1110,9 +1124,6 @@ export class BattleActions {
 				continue;
 			}
 			damage[i] = curDamage;
-			if (move.selfdestruct === 'ifHit') {
-				this.battle.faint(source, source, move);
-			}
 		}
 		return damage;
 	}
@@ -1216,6 +1227,9 @@ export class BattleActions {
 					}
 				}
 			}
+			if (moveData.selfdestruct === 'ifHit' && damage[i] !== false) {
+				this.battle.faint(source, source, move);
+			}
 			if (moveData.selfSwitch) {
 				if (this.battle.canSwitch(source.side)) {
 					didSomething = true;
@@ -1228,7 +1242,6 @@ export class BattleActions {
 			damage[i] = this.combineResults(damage[i], didSomething === null ? false : didSomething);
 			didAnything = this.combineResults(didAnything, didSomething);
 		}
-
 
 		if (!didAnything && didAnything !== 0 && !moveData.self && !moveData.selfdestruct) {
 			if (!isSelf && !isSecondary) {
@@ -1271,7 +1284,10 @@ export class BattleActions {
 				this.battle.runEvent('ModifySecondaries', target, source, moveData, moveData.secondaries.slice());
 			for (const secondary of secondaries) {
 				const secondaryRoll = this.battle.random(100);
-				if (typeof secondary.chance === 'undefined' || secondaryRoll < secondary.chance) {
+				// User stat boosts or target stat drops can possibly overflow if it goes beyond 256
+				const secondaryOverflow = (secondary.boosts || secondary.self);
+				if (typeof secondary.chance === 'undefined' ||
+					secondaryRoll < (secondaryOverflow ? secondary.chance % 256 : secondary.chance)) {
 					this.moveHit(target, source, move, secondary, true, isSelf);
 				}
 			}
@@ -1434,7 +1450,7 @@ export class BattleActions {
 				this.battle.heal(pokemon.maxhp, pokemon, pokemon, zPower);
 				break;
 			case 'healreplacement':
-				move.self = {slotCondition: 'healreplacement'};
+				pokemon.side.addSlotCondition(pokemon, 'healreplacement', pokemon, move);
 				break;
 			case 'clearnegativeboost':
 				const boosts: SparseBoostsTable = {};
@@ -1562,6 +1578,10 @@ export class BattleActions {
 
 		if (!basePower) return 0;
 		basePower = this.battle.clampIntRange(basePower, 1);
+		// Hacked Max Moves have 0 base power, even if you Dynamax
+		if ((!source.volatiles['dynamax'] && move.isMax) || (move.isMax && this.dex.moves.get(move.baseMove).isMax)) {
+			basePower = 0;
+		}
 
 		const level = source.level;
 
@@ -1757,13 +1777,6 @@ export class BattleActions {
 	runMegaEvo(pokemon: Pokemon) {
 		const speciesid = pokemon.canMegaEvo || pokemon.canUltraBurst;
 		if (!speciesid) return false;
-
-		// Pokémon affected by Sky Drop cannot mega evolve. Enforce it here for now.
-		for (const foeActive of pokemon.foes()) {
-			if (foeActive.volatiles['skydrop']?.source === pokemon) {
-				return false;
-			}
-		}
 
 		pokemon.formeChange(speciesid, pokemon.getItem(), true);
 

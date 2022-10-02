@@ -309,8 +309,13 @@ interface ModdedBattlePokemon {
 	inherit?: true;
 	lostItemForDelibird?: Item | null;
 	boostBy?: (this: Pokemon, boost: SparseBoostsTable) => boolean | number;
+	clearBoosts?: (this: Pokemon) => void;
 	calculateStat?: (this: Pokemon, statName: StatIDExceptHP, boost: number, modifier?: number) => number;
 	cureStatus?: (this: Pokemon, silent?: boolean) => boolean;
+	eatItem?: (this: Pokemon, force?: boolean, source?: Pokemon, sourceEffect?: Effect) => boolean;
+	formeChange?: (
+		this: Pokemon, speciesId: string | Species, source: Effect, isPermanent?: boolean, message?: string
+	) => boolean;
 	getAbility?: (this: Pokemon) => Ability;
 	getActionSpeed?: (this: Pokemon) => number;
 	getItem?: (this: Pokemon) => Item;
@@ -340,6 +345,7 @@ interface ModdedBattlePokemon {
 	) => boolean;
 	takeItem?: (this: Pokemon, source: Pokemon | undefined) => boolean | Item;
 	transformInto?: (this: Pokemon, pokemon: Pokemon, effect: Effect | null) => boolean;
+	useItem?: (this: Pokemon, source?: Pokemon, sourceEffect?: Effect) => boolean;
 	ignoringAbility?: (this: Pokemon) => boolean;
 	ignoringItem?: (this: Pokemon) => boolean;
 
@@ -372,6 +378,7 @@ interface ModdedBattleScriptsData extends Partial<BattleScriptsData> {
 	init?: (this: ModdedDex) => void;
 	natureModify?: (this: Battle, stats: StatsTable, set: PokemonSet) => StatsTable;
 	nextTurn?: (this: Battle) => void;
+	runAction?: (this: Battle, action: Action) => void;
 	spreadModify?: (this: Battle, baseStats: StatsTable, set: PokemonSet) => StatsTable;
 	suppressingWeather?: (this: Battle) => boolean;
 	trunc?: (n: number) => number;
@@ -510,6 +517,7 @@ namespace RandomTeamsTypes {
 		shiny: boolean;
 		nature?: string;
 		happiness?: number;
+		dynamaxLevel?: number;
 		gigantamax?: boolean;
 	}
 	export interface RandomFactorySet {
@@ -525,6 +533,7 @@ namespace RandomTeamsTypes {
 		ivs: SparseStatsTable;
 		nature: string;
 		moves: string[];
+		dynamaxLevel?: number;
 		gigantamax?: boolean;
 	}
 }

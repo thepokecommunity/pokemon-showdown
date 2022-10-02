@@ -33,6 +33,8 @@ export class RandomGen7Teams extends RandomTeams {
 	constructor(format: Format | string, prng: PRNG | PRNGSeed | null) {
 		super(format, prng);
 
+		this.noStab = [...this.noStab, 'voltswitch'];
+
 		this.moveEnforcementCheckers = {
 			Bug: movePool => movePool.includes('megahorn') || movePool.includes('pinmissile'),
 			Dark: (movePool, moves, abilities, types, counter, species) => (
@@ -46,7 +48,7 @@ export class RandomGen7Teams extends RandomTeams {
 			),
 			Electric: (movePool, moves, abilities, types, counter) => !counter.get('Electric') || movePool.includes('thunder'),
 			Fairy: (movePool, moves, abilities, types, counter) => (
-				!counter.get('Fairy') && !types.has('Flying') && !abilities.has('Pixilate')
+				(!counter.get('Fairy') && !types.has('Flying') && !abilities.has('Pixilate'))
 			),
 			Fighting: (movePool, moves, abilities, types, counter) => !counter.get('Fighting') || !counter.get('stab'),
 			Fire: (movePool, moves, abilities, types, counter) => (
@@ -331,7 +333,7 @@ export class RandomGen7Teams extends RandomTeams {
 				(moves.has('clangingscales') && !teamDetails.zMove)
 			)};
 		case 'thunderbolt':
-			return {cull: moves.has('discharge') || (moves.has('voltswitch') && moves.has('wildcharge'))};
+			return {cull: ['discharge', 'voltswitch', 'wildcharge'].some(m => moves.has(m))};
 		case 'moonblast':
 			return {cull: isDoubles && moves.has('dazzlinggleam')};
 		case 'aurasphere': case 'focusblast':
@@ -435,13 +437,22 @@ export class RandomGen7Teams extends RandomTeams {
 		case 'endeavor':
 			return {cull: !isLead && !abilities.has('Defeatist')};
 		case 'explosion':
-			return {cull: !!counter.setupType || moves.has('wish') || abilities.has('Refrigerate') && moves.has('freezedry')};
+			return {cull: (
+				!!counter.setupType ||
+				moves.has('wish') ||
+				(abilities.has('Refrigerate') && (moves.has('freezedry') || movePool.includes('return')))
+			)};
 		case 'extremespeed': case 'skyattack':
 			return {cull: moves.has('substitute') || counter.setupType !== 'Physical' && moves.has('vacuumwave')};
 		case 'facade':
 			return {cull: moves.has('bulkup') || hasRestTalk};
 		case 'hiddenpower':
-			return {cull: moves.has('rest') || !counter.get('stab') && counter.damagingMoves.size < 2};
+			return {cull: (
+				moves.has('rest') ||
+				(!counter.get('stab') && counter.damagingMoves.size < 2) ||
+				// Force Moonblast on Special-setup Fairies
+				(counter.setupType === 'Special' && types.has('Fairy') && movePool.includes('moonblast'))
+			)};
 		case 'hypervoice':
 			return {cull: moves.has('blizzard')};
 		case 'judgment':
@@ -719,7 +730,7 @@ export class RandomGen7Teams extends RandomTeams {
 		if (ability === 'Harvest' || ability === 'Emergency Exit' && !!counter.get('Status')) return 'Sitrus Berry';
 		if (ability === 'Imposter') return 'Choice Scarf';
 		if (ability === 'Poison Heal') return 'Toxic Orb';
-		if (species.evos.length) return (ability === 'Technician' && counter.get('Physical') >= 4) ? 'Choice Band' : 'Eviolite';
+		if (species.nfe) return (ability === 'Technician' && counter.get('Physical') >= 4) ? 'Choice Band' : 'Eviolite';
 		if (moves.has('switcheroo') || moves.has('trick')) {
 			if (species.baseStats.spe >= 60 && species.baseStats.spe <= 108) {
 				return 'Choice Scarf';
@@ -1024,7 +1035,7 @@ export class RandomGen7Teams extends RandomTeams {
 			// Random Multi Battle uses doubles move pools, but Ally Switch fails in multi battles
 			const allySwitch = movePool.indexOf('allyswitch');
 			if (allySwitch > -1) {
-				if (movePool.length > 4) {
+				if (movePool.length > this.maxMoveCount) {
 					this.fastPop(movePool, allySwitch);
 				} else {
 					// Ideally, we'll never get here, but better to have a move that usually does nothing than one that always does
@@ -1061,7 +1072,7 @@ export class RandomGen7Teams extends RandomTeams {
 
 		do {
 			// Choose next 4 moves from learnset/viable moves and add them to moves list:
-			while (moves.size < 4 && movePool.length) {
+			while (moves.size < this.maxMoveCount && movePool.length) {
 				const moveid = this.sampleNoReplace(movePool);
 				if (moveid.startsWith('hiddenpower')) {
 					availableHP--;
@@ -1070,7 +1081,7 @@ export class RandomGen7Teams extends RandomTeams {
 				}
 				moves.add(moveid);
 			}
-			while (moves.size < 4 && rejectedPool.length) {
+			while (moves.size < this.maxMoveCount && rejectedPool.length) {
 				const moveid = this.sampleNoReplace(rejectedPool);
 				if (moveid.startsWith('hiddenpower')) {
 					if (hasHiddenPower) continue;
@@ -1226,7 +1237,7 @@ export class RandomGen7Teams extends RandomTeams {
 					break;
 				}
 			}
-		} while (moves.size < 4 && (movePool.length || rejectedPool.length));
+		} while (moves.size < this.maxMoveCount && (movePool.length || rejectedPool.length));
 
 		// Moveset modifications
 		if (moves.has('autotomize') && moves.has('heavyslam')) {
@@ -1339,13 +1350,15 @@ export class RandomGen7Teams extends RandomTeams {
 		}
 
 		let level: number;
-		if (!isDoubles) {
+		if (this.adjustLevel) {
+			level = this.adjustLevel;
+		} else if (!isDoubles) {
 			const levelScale: {[k: string]: number} = {uber: 76, ou: 80, uu: 82, ru: 84, nu: 86, pu: 88};
 			const customScale: {[k: string]: number} = {
 				// Banned Ability
 				Dugtrio: 82, Gothitelle: 82, Pelipper: 84, Politoed: 84, Torkoal: 84, Wobbuffet: 82,
 				// Holistic judgement
-				'Castform-Rainy': 100, 'Castform-Snowy': 100, 'Castform-Sunny': 100, Delibird: 100, Spinda: 100, Unown: 100,
+				'Castform-Rainy': 100, 'Castform-Snowy': 100, 'Castform-Sunny': 100, Delibird: 100, Luvdisc: 100, Spinda: 100, Unown: 100,
 			};
 			const tier = toID(species.tier).replace('bl', '');
 			level = levelScale[tier] || (species.nfe ? 90 : 80);
@@ -1454,6 +1467,8 @@ export class RandomGen7Teams extends RandomTeams {
 	}
 
 	randomTeam() {
+		this.enforceNoDirectCustomBanlistChanges();
+
 		const seed = this.prng.seed;
 		const ruleTable = this.dex.formats.getRuleTable(this.format);
 		const pokemon = [];
@@ -1707,7 +1722,7 @@ export class RandomGen7Teams extends RandomTeams {
 		const item = this.sampleIfArray(setData.set.item);
 		const ability = this.sampleIfArray(setData.set.ability);
 		const nature = this.sampleIfArray(setData.set.nature);
-		const level = setData.set.level || (tier === "LC" ? 5 : 100);
+		const level = this.adjustLevel || setData.set.level || (tier === "LC" ? 5 : 100);
 
 		return {
 			name: setData.set.name || species.baseSpecies,
@@ -1726,6 +1741,8 @@ export class RandomGen7Teams extends RandomTeams {
 	}
 
 	randomFactoryTeam(side: PlayerOptions, depth = 0): RandomTeamsTypes.RandomFactorySet[] {
+		this.enforceNoDirectCustomBanlistChanges();
+
 		const forceResult = (depth >= 4);
 		const isMonotype = !!this.forceMonotype || this.dex.formats.getRuleTable(this.format).has('sametypeclause');
 
@@ -2013,6 +2030,8 @@ export class RandomGen7Teams extends RandomTeams {
 	}
 
 	randomBSSFactoryTeam(side: PlayerOptions, depth = 0): RandomTeamsTypes.RandomFactorySet[] {
+		this.enforceNoDirectCustomBanlistChanges();
+
 		const forceResult = (depth >= 4);
 
 		const pokemon = [];

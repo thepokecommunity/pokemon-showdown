@@ -1572,7 +1572,7 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 			if (!pokemon.hp) return;
 			const types = pokemon.moveSlots.map(slot => this.dex.moves.get(slot.id).type);
 			const type = types.length ? this.sample(types) : '???';
-			if (pokemon.setType(type)) {
+			if (this.dex.types.isName(type) && pokemon.setType(type)) {
 				this.add('-ability', pokemon, 'Wild Magic Surge');
 				this.add('-start', pokemon, 'typechange', type);
 			}
@@ -1713,10 +1713,10 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 		},
 		onTryMove(pokemon, target, move) {
 			const moveData = pokemon.getMoveData(move.id);
-			if (!moveData) return;
+			if (!moveData || moveData.pp < 0.5) return;
 			// Lost 1 PP due to move usage, restore 0.5 PP to make it so that only 0.5 PP
 			// would be used.
-			moveData.pp = (Math.round(moveData.pp * 100) + 50) / 100;
+			moveData.pp += 0.5;
 		},
 		gen: 8,
 	},

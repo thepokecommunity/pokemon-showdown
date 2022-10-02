@@ -28,8 +28,9 @@ import type {Punishment} from './punishments';
 import type {PartialModlogEntry} from './modlog';
 import {FriendsDatabase, PM} from './friends';
 import {SQL, Repl, FS, Utils} from '../lib';
+import * as Artemis from './artemis';
 import {Dex} from '../sim';
-import {resolve} from 'path';
+import * as pathModule from 'path';
 import * as JSX from './chat-jsx';
 
 export type PageHandler = (this: PageContext, query: string[], user: User, connection: Connection)
@@ -65,13 +66,21 @@ export interface AnnotatedChatCommands {
 	[k: string]: AnnotatedChatHandler | string | string[] | AnnotatedChatCommands;
 }
 
-export interface Handlers {
-	onRoomClose?: (id: string, user: User, connection: Connection, page: boolean) => any;
-	onRenameRoom?: (oldId: RoomID, newID: RoomID, room: BasicRoom) => void;
-	onBattleStart?: (user: User, room: GameRoom) => void;
-	onBattleLeave?: (user: User, room: GameRoom) => void;
-	onDisconnect?: (user: User) => void;
-	onRoomDestroy?: (roomid: RoomID) => void;
+export type HandlerTable = {[key in keyof Handlers]?: Handlers[key]};
+
+interface Handlers {
+	onRoomClose: (id: string, user: User, connection: Connection, page: boolean) => any;
+	onRenameRoom: (oldId: RoomID, newID: RoomID, room: BasicRoom) => void;
+	onBattleStart: (user: User, room: GameRoom) => void;
+	onBattleLeave: (user: User, room: GameRoom) => void;
+	onRoomJoin: (room: BasicRoom, user: User, connection: Connection) => void;
+	onDisconnect: (user: User) => void;
+	onRoomDestroy: (roomid: RoomID) => void;
+	onBattleEnd: (battle: RoomBattle, winner: ID, players: ID[]) => void;
+	onLadderSearch: (user: User, connection: Connection, format: ID) => void;
+	onBattleRanked: (
+		battle: Rooms.RoomBattle, winner: ID, ratings: (AnyObject | null | undefined)[], players: ID[]
+	) => void;
 }
 
 export interface ChatPlugin {
@@ -1146,11 +1155,25 @@ export class CommandContext extends MessageContext {
 
 	checkFormat(room: BasicRoom | null | undefined, user: User, message: string) {
 		if (!room) return true;
-		if (!room.settings.filterStretching && !room.settings.filterCaps && !room.settings.filterEmojis) return true;
-		if (user.can('bypassall')) return true;
+		if (
+			!room.settings.filterStretching && !room.settings.filterCaps &&
+			!room.settings.filterEmojis && !room.settings.filterLinks
+		) {
+			return true;
+		}
+		if (user.can('mute', null, room)) return true;
 
 		if (room.settings.filterStretching && /(.+?)\1{5,}/i.test(user.name)) {
 			throw new Chat.ErrorMessage(`Your username contains too much stretching, which this room doesn't allow.`);
+		}
+		if (room.settings.filterLinks) {
+			const bannedLinks = this.checkBannedLinks(message);
+			if (bannedLinks.length) {
+				throw new Chat.ErrorMessage(
+					`You have linked to ${bannedLinks.length > 1 ? 'unrecognized external websites' : 'an unrecognized external website'} ` +
+					`(${bannedLinks.join(', ')}), which this room doesn't allow.`
+				);
+			}
 		}
 		if (room.settings.filterCaps && /[A-Z\s]{6,}/.test(user.name)) {
 			throw new Chat.ErrorMessage(`Your username contains too many capital letters, which this room doesn't allow.`);
@@ -1445,6 +1468,11 @@ export class CommandContext extends MessageContext {
 			return true;
 		}
 
+		if (this.user.locked && !(this.room?.roomid.startsWith('help-') || this.pmTarget?.can('lock'))) {
+			this.errorReply(`You cannot broadcast this command's information while locked.`);
+			throw new Chat.ErrorMessage(`To see it for yourself, use: /${this.message.slice(1)}`);
+		}
+
 		if (this.room && !this.user.can('show', null, this.room)) {
 			this.errorReply(`You need to be voiced to broadcast this command's information.`);
 			throw new Chat.ErrorMessage(`To see it for yourself, use: /${this.message.slice(1)}`);
@@ -1539,6 +1567,13 @@ export class CommandContext extends MessageContext {
 						throw new Chat.ErrorMessage(this.tr`You are ${lockType} and can't talk in chat. ${lockExpiration}`);
 					}
 				}
+				if (!room.persist && !room.roomid.startsWith('help-') && !(user.registered || user.autoconfirmed)) {
+					this.sendReply(
+						this.tr`|html|<div class="message-error">You must be registered to chat in temporary rooms (like battles).</div>` +
+						this.tr`You may register in the <button name="openOptions"><i class="fa fa-cog"></i> Options</button> menu.`
+					);
+					throw new Chat.Interruption();
+				}
 				if (room.isMuted(user)) {
 					throw new Chat.ErrorMessage(this.tr`You are muted and cannot talk in this room.`);
 				}
@@ -1573,7 +1608,7 @@ export class CommandContext extends MessageContext {
 					);
 					throw new Chat.Interruption();
 				}
-				if (!(targetUser.registered || targetUser.autoconfirmed)) {
+				if (targetUser.id !== user.id && !(targetUser.registered || targetUser.autoconfirmed)) {
 					throw new Chat.ErrorMessage(this.tr`That user is unregistered and cannot be PMed.`);
 				}
 				if (lockType && !targetUser.can('lock')) {
@@ -1629,19 +1664,7 @@ export class CommandContext extends MessageContext {
 
 		// If the corresponding config option is set, non-AC users cannot send links, except to staff.
 		if (Config.restrictLinks && !user.autoconfirmed) {
-			// eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-			const links = message.match(Chat.linkRegex);
-			const allLinksWhitelisted = !links || links.every(link => {
-				link = link.toLowerCase();
-				const domainMatches = /^(?:http:\/\/|https:\/\/)?(?:[^/]*\.)?([^/.]*\.[^/.]*)\.?($|\/|:)/.exec(link);
-				const domain = domainMatches?.[1];
-				const hostMatches = /^(?:http:\/\/|https:\/\/)?([^/]*[^/.])\.?($|\/|:)/.exec(link);
-				let host = hostMatches?.[1];
-				if (host?.startsWith('www.')) host = host.slice(4);
-				if (!domain || !host) return null;
-				return LINK_WHITELIST.includes(host) || LINK_WHITELIST.includes(`*.${domain}`);
-			});
-			if (!allLinksWhitelisted && !(targetUser?.can('lock') || room?.settings.isHelp)) {
+			if (this.checkBannedLinks(message).length && !(targetUser?.can('lock') || room?.settings.isHelp)) {
 				throw new Chat.ErrorMessage("Your account must be autoconfirmed to send links to other users, except for global staff.");
 			}
 		}
@@ -1714,6 +1737,21 @@ export class CommandContext extends MessageContext {
 			throw new Chat.ErrorMessage("This user is currently locked, so you cannot send them HTML.");
 		}
 		return true;
+	}
+
+	checkBannedLinks(message: string) {
+		// RegExp#exec only returns one match, String#match returns all of them
+		// eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
+		return (message.match(Chat.linkRegex) || []).filter(link => {
+			link = link.toLowerCase();
+			const domainMatches = /^(?:http:\/\/|https:\/\/)?(?:[^/]*\.)?([^/.]*\.[^/.]*)\.?($|\/|:)/.exec(link);
+			const domain = domainMatches?.[1];
+			const hostMatches = /^(?:http:\/\/|https:\/\/)?([^/]*[^/.])\.?($|\/|:)/.exec(link);
+			let host = hostMatches?.[1];
+			if (host?.startsWith('www.')) host = host.slice(4);
+			if (!domain || !host) return null;
+			return !(LINK_WHITELIST.includes(host) || LINK_WHITELIST.includes(`*.${domain}`));
+		});
 	}
 	/* eslint-enable @typescript-eslint/prefer-optional-chain */
 	checkEmbedURI(uri: string) {
@@ -1943,7 +1981,7 @@ export const Chat = new class {
 	commands!: AnnotatedChatCommands;
 	basePages!: PageTable;
 	pages!: PageTable;
-	readonly destroyHandlers: (() => void)[] = [];
+	readonly destroyHandlers: (() => void)[] = [Artemis.destroy];
 	readonly crqHandlers: {[k: string]: CRQHandler} = {};
 	readonly handlers: {[k: string]: ((...args: any) => any)[]} = Object.create(null);
 	/** The key is the name of the plugin. */
@@ -2223,7 +2261,7 @@ export const Chat = new class {
 		}
 		Utils.sortBy(migrationsToRun, ({version}) => version);
 		for (const {file} of migrationsToRun) {
-			await this.database.runFile(resolve(migrationsFolder, file));
+			await this.database.runFile(pathModule.resolve(migrationsFolder, file));
 		}
 
 		Chat.destroyHandlers.push(() => Chat.database?.destroy());
@@ -2315,15 +2353,21 @@ export const Chat = new class {
 
 	packageData: AnyObject = {};
 
+	getPluginName(file: string) {
+		const nameWithExt = pathModule.relative(__dirname, file).replace(/^chat-(?:commands|plugins)./, '');
+		let name = nameWithExt.slice(0, nameWithExt.lastIndexOf('.'));
+		if (name.endsWith('/index')) name = name.slice(0, -6);
+		return name;
+	}
+
 	loadPluginFile(file: string) {
 		if (!VALID_PLUGIN_ENDINGS.some(ext => file.endsWith(ext))) return;
-		const filename = file.split('/').pop() || "";
-		this.loadPlugin(require(file), filename.slice(0, filename.lastIndexOf('.')) || file);
+		this.loadPlugin(require(file), this.getPluginName(file));
 	}
 
 	loadPluginDirectory(dir: string, depth = 0) {
 		for (const file of FS(dir).readdirSync()) {
-			const path = resolve(dir, file);
+			const path = pathModule.resolve(dir, file);
 			if (FS(path).isDirectorySync()) {
 				depth++;
 				if (depth > MAX_PLUGIN_LOADING_DEPTH) continue;
@@ -2406,18 +2450,17 @@ export const Chat = new class {
 		if (plugin.nicknamefilter) Chat.nicknamefilters.push(plugin.nicknamefilter);
 		if (plugin.statusfilter) Chat.statusfilters.push(plugin.statusfilter);
 		if (plugin.onRenameRoom) {
-			if (!Chat.handlers['RenameRoom']) Chat.handlers['RenameRoom'] = [];
-			Chat.handlers['RenameRoom'].push(plugin.onRenameRoom);
+			if (!Chat.handlers['onRenameRoom']) Chat.handlers['onRenameRoom'] = [];
+			Chat.handlers['onRenameRoom'].push(plugin.onRenameRoom);
 		}
 		if (plugin.onRoomClose) {
-			if (!Chat.handlers['RoomClose']) Chat.handlers['RoomClose'] = [];
-			Chat.handlers['RoomClose'].push(plugin.onRoomClose);
+			if (!Chat.handlers['onRoomClose']) Chat.handlers['onRoomClose'] = [];
+			Chat.handlers['onRoomClose'].push(plugin.onRoomClose);
 		}
 		if (plugin.handlers) {
-			for (const k in plugin.handlers) {
-				const handlerName = k.slice(2);
+			for (const handlerName in plugin.handlers) {
 				if (!Chat.handlers[handlerName]) Chat.handlers[handlerName] = [];
-				Chat.handlers[handlerName].push(plugin.handlers[k]);
+				Chat.handlers[handlerName].push(plugin.handlers[handlerName]);
 			}
 		}
 		Chat.plugins[name] = plugin;
@@ -2457,7 +2500,7 @@ export const Chat = new class {
 		}
 	}
 
-	runHandlers(name: string, ...args: any) {
+	runHandlers(name: keyof Handlers, ...args: Parameters<Handlers[typeof name]>) {
 		const handlers = this.handlers[name];
 		if (!handlers) return;
 		for (const h of handlers) {
@@ -2466,11 +2509,11 @@ export const Chat = new class {
 	}
 
 	handleRoomRename(oldID: RoomID, newID: RoomID, room: Room) {
-		Chat.runHandlers('RoomRename', oldID, newID, room);
+		Chat.runHandlers('onRenameRoom', oldID, newID, room);
 	}
 
 	handleRoomClose(roomid: RoomID, user: User, connection: Connection) {
-		Chat.runHandlers('RoomClose', roomid, user, connection, roomid.startsWith('view-'));
+		Chat.runHandlers('onRoomClose', roomid, user, connection, roomid.startsWith('view-'));
 	}
 
 	/**
@@ -2881,6 +2924,24 @@ export const Chat = new class {
 	 */
 	getImageDimensions(url: string): Promise<{height: number, width: number}> {
 		return probe(url);
+	}
+
+	parseArguments(
+		str: string,
+		delim = ',',
+		opts: Partial<{paramDelim: string, useIDs: boolean, allowEmpty: boolean}> = {useIDs: true}
+	) {
+		const result: Record<string, string[]> = {};
+		for (const part of str.split(delim)) {
+			let [key, val] = Utils.splitFirst(part, opts.paramDelim ||= "=").map(f => f.trim());
+			if (opts.useIDs) key = toID(key);
+			if (!toID(key) || (!opts.allowEmpty && !toID(val))) {
+				throw new Chat.ErrorMessage(`Invalid option ${part}. Must be in [key]${opts.paramDelim}[value] format.`);
+			}
+			if (!result[key]) result[key] = [];
+			result[key].push(val);
+		}
+		return result;
 	}
 
 	/**

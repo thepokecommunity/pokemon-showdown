@@ -179,6 +179,10 @@ function isUsernameKnown(name: string) {
 	return false;
 }
 
+function isUsername(name: string) {
+	return /[A-Za-z0-9]/.test(name.charAt(0)) && /[A-Za-z]/.test(name) && !name.includes(',');
+}
+
 function isTrusted(userid: ID) {
 	if (globalAuth.has(userid)) return userid;
 	for (const room of Rooms.global.chatRooms) {
@@ -829,6 +833,7 @@ export class User extends Chat.MessageContext {
 			Punishments.checkName(user, userid, registered);
 
 			Rooms.global.checkAutojoin(user);
+			Rooms.global.joinOldBattles(this);
 			Chat.loginfilter(user, this, userType);
 			return true;
 		}
@@ -844,6 +849,7 @@ export class User extends Chat.MessageContext {
 			return false;
 		}
 		Rooms.global.checkAutojoin(this);
+		Rooms.global.joinOldBattles(this);
 		Chat.loginfilter(this, null, userType);
 		return true;
 	}
@@ -1065,9 +1071,7 @@ export class User extends Chat.MessageContext {
 		this.registered = true;
 		if (!isMerge) this.tempGroup = globalAuth.get(this.id);
 
-		if (Config.customavatars && Config.customavatars[this.id]) {
-			this.avatar = Config.customavatars[this.id];
-		}
+		Users.Avatars?.handleLogin(this);
 
 		const groupInfo = Config.groups[this.tempGroup];
 		this.isStaff = !!(groupInfo && (groupInfo.lock || groupInfo.root));
@@ -1149,7 +1153,7 @@ export class User extends Chat.MessageContext {
 	}
 	markDisconnected() {
 		if (!this.connected) return;
-		Chat.runHandlers('Disconnect', this);
+		Chat.runHandlers('onDisconnect', this);
 		this.connected = false;
 		Users.onlineCount--;
 		this.lastDisconnected = Date.now();
@@ -1705,8 +1709,10 @@ export const Users = {
 	getExact: getExactUser,
 	findUsers,
 	Auth,
+	Avatars: null as typeof import('./chat-commands/avatars').Avatars | null,
 	globalAuth,
 	isUsernameKnown,
+	isUsername,
 	isTrusted,
 	SECTIONLEADER_SYMBOL,
 	PLAYER_SYMBOL,
