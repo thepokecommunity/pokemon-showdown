@@ -1743,18 +1743,26 @@ export class RandomTeams {
 		type: string,
 		pokemonToExclude: RandomTeamsTypes.RandomSet[] = [],
 		isMonotype = false,
-		teamGeneration,
-		teamColor,
 		pokemonList: string[]
 	): [{[k: string]: string[]}, string[]] {
 		const exclude = pokemonToExclude.map(p => toID(p.species));
 		const pokemonPool: {[k: string]: string[]} = {};
 		const baseSpeciesPool = [];
 		const formatID = this.format.id;
+
+		// For Generational
+		const teamGeneration = Math.floor(Math.random() * 7) + 1;
+
+		// For Color
+		const colorPool = ['Red', 'Blue', 'Yellow', 'Green', 'Black', 'Brown', 'Purple', 'Gray', 'White', 'Pink'];
+		const teamColor = colorPool[this.random(colorPool.length)];
+
+		// For Team Magma/Aqua
 		const teamMagmaAqua = new Set(['Mightyena', 'Camerupt', 'Weezing', 'Groudon', 'Houndoom', 'Ninetales', 'Torkoal',
 			'Magcargo', 'Sandslash', 'Salamence', 'Banette', 'Rhydon', 'Rhyperior', 'Zangoose', 'Muk', 'Kyogre', 'Tentacruel',
 			'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo', 'Pelipper', 'Volbeat', 'Illumise', 'Dusknoir', 'Cacturne', 'Seviper',
 			'Lanturn']);
+
 		for (const pokemon of pokemonList) {
 			let species = this.dex.species.get(pokemon);
 			if (exclude.includes(species.id)) continue;
@@ -1824,20 +1832,12 @@ export class RandomTeams {
 		const seed = this.prng.seed;
 		const ruleTable = this.dex.formats.getRuleTable(this.format);
 		const pokemon: RandomTeamsTypes.RandomSet[] = [];
-		const formatID = this.format.id;
 
 		// For Monotype
 		const isMonotype = !!this.forceMonotype || ruleTable.has('sametypeclause');
 		const isDoubles = this.format.gameType !== 'singles';
 		const typePool = this.dex.types.names().filter(name => name !== "Stellar");
 		const type = this.forceMonotype || this.sample(typePool);
-
-		// For Generational
-		const teamGeneration = Math.floor(Math.random() * 7) + 1;
-
-		// For Color
-		const colorPool = ['Red', 'Blue', 'Yellow', 'Green', 'Black', 'Brown', 'Purple', 'Gray', 'White', 'Pink'];
-		const teamColor = colorPool[this.random(colorPool.length)];
 
 		// PotD stuff
 		const usePotD = global.Config && Config.potd && ruleTable.has('potd');
@@ -1853,8 +1853,7 @@ export class RandomTeams {
 		let numMaxLevelPokemon = 0;
 
 		const pokemonList = isDoubles ? Object.keys(this.randomDoublesSets) : Object.keys(this.randomSets);
-		const [pokemonPool, baseSpeciesPool] = this.getPokemonPool(type, pokemon, isMonotype, teamGeneration, teamColor,
-			pokemonList);
+		const [pokemonPool, baseSpeciesPool] = this.getPokemonPool(type, pokemon, isMonotype, pokemonList);
 
 		let leadsRemaining = this.format.gameType === 'doubles' ? 2 : 1;
 		while (baseSpeciesPool.length && pokemon.length < this.maxTeamSize) {
