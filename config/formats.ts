@@ -2853,6 +2853,125 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		},
 	},
 	{
+		name: "[Gen 9] 1v1 Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 1'],
+	},
+	{
+		name: "[Gen 9] Uber Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] OU/UU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] RU/NU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] PU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Generational Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Kanto Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Johto Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Hoenn Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Sinnoh Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Unova Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Kalos Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Alola Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Galar Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Paldea Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Color Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Inverse Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle', 'Inverse Mod'],
+	},
+	{
 		name: "[Gen 8] Random Battle",
 		desc: `Randomized teams of level-balanced Pok&eacute;mon with sets that are generated to be competitively viable.`,
 		threads: [
@@ -3146,159 +3265,6 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 			}
 		},
 	},
-	{
-		name: "[Gen 8] 1v1 Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 1'],
-	},
-	{
-		name: "[Gen 8] Uber Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] OU/UU Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] RU/NU Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] PU Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	/**
-	*{
-	*	name: "[Gen 8] LC Random",
-	*
-	*	mod: 'gen8',
-	*	team: 'random',
-	*	ruleset: ['[Gen 8] Unrated Random Battle'],
-	*},
-	*/
-	{
-		name: "[Gen 8] Generational Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Kanto Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Johto Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Hoenn Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Sinnoh Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Unova Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Kalos Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Alola Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Galar Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 8] Color Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	/**
-	*{
-	*	name: "[Gen 8] Inverse Random",
-	*
-	*	mod: 'gen8',
-	*	team: 'random',
-	*	ruleset: ['[Gen 8] Unrated Random Battle'],
-	*	onNegateImmunity: false,
-	*	onEffectiveness(typeMod, target, type, move) {
-	*		// The effectiveness of Freeze Dry on Water isn't reverted
-	*		if (move && move.id === 'freezedry' && type === 'Water') return;
-	*		if (move && !this.getImmunity(move, type)) return 1;
-	*		return -typeMod;
-	*	},
-	*},
-	*/
-	{
-		name: "[Gen 8] Metronome 3v3 Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 3'],
-	},
-	{
-		name: "[Gen 8] Metronome 6v6 Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Unrated Random Battle'],
-	},
-	/**
-	*{
-	*	name: "[Gen 8] Orb Random",
-	*
-	*	mod: 'gen8',
-	*	team: 'random',
-	*	ruleset: ['[Gen 8] Unrated Random Battle'],
-	*},
-	*/
 
 	// RoA Spotlight
 	///////////////////////////////////////////////////////////////////
