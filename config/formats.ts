@@ -26,21 +26,6 @@ export const Formats: FormatList = [
 		section: "Sw/Sh Singles",
 	},
 	{
-		name: "[Gen 8] Fortune Cup",
-
-		mod: 'gen8',
-		gameType: 'doubles',
-		ruleset: ['Standard NatDex', 'Sleep Clause Mod', 'Species Clause', 'OHKO Clause', 'Evasion Items Clause', 'Evasion Moves Clause'],
-		banlist: ['Moody', 'Sand Veil', 'Snow Cloak', 'Bright Powder', 'King\'s Rock', 'Lax Incense', 'Razor Fang', 'Quick Claw'],
-	},
-	{
-		name: "[Gen 8] Spooky Random",
-
-		mod: 'gen8',
-		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
-	},
-	{
 		name: "[Gen 8] Random Battle",
 		desc: `Randomized teams of level-balanced Pok&eacute;mon with sets that are generated to be competitively viable.`,
 		threads: [
@@ -50,20 +35,6 @@ export const Formats: FormatList = [
 		mod: 'gen8',
 		team: 'random',
 		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
-	},
-	{
-		name: "[Gen 8] Random (no PotD)",
-		desc: `Randomized teams of level-balanced Pok&eacute;mon with sets that are generated to be competitively viable.`,
-		threads: [
-			`&bullet; <a href="https://www.smogon.com/forums/threads/3656537/">Random Battle Suggestions</a>`,
-		],
-
-		mod: 'gen8',
-		team: 'random',
-		challengeShow: false,
-		tournamentShow: false,
-		rated: false,
-		ruleset: ['Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod'],
 	},
 	{
 		name: "[Gen 8] Unrated Random Battle",
@@ -2582,35 +2553,35 @@ export const Formats: FormatList = [
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)', 'Team Preview', 'Picked Team Size = 1'],
+		ruleset: ['[Gen 8] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 1'],
 	},
 	{
 		name: "[Gen 8] Uber Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] OU/UU Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] RU/NU Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] PU Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	/**
 	*{
@@ -2618,7 +2589,7 @@ export const Formats: FormatList = [
 	*
 	*	mod: 'gen8',
 	*	team: 'random',
-	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*	ruleset: ['[Gen 8] Unrated Random Battle'],
 	*},
 	*/
 	{
@@ -2626,70 +2597,70 @@ export const Formats: FormatList = [
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Kanto Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Johto Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Hoenn Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Sinnoh Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Unova Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Kalos Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Alola Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Galar Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 8] Color Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	/**
 	*{
@@ -2697,7 +2668,7 @@ export const Formats: FormatList = [
 	*
 	*	mod: 'gen8',
 	*	team: 'random',
-	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*	ruleset: ['[Gen 8] Unrated Random Battle'],
 	*	onNegateImmunity: false,
 	*	onEffectiveness(typeMod, target, type, move) {
 	*		// The effectiveness of Freeze Dry on Water isn't reverted
@@ -2712,14 +2683,14 @@ export const Formats: FormatList = [
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)', 'Team Preview', 'Picked Team Size = 3'],
+		ruleset: ['[Gen 8] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 3'],
 	},
 	{
 		name: "[Gen 8] Metronome 6v6 Random",
 
 		mod: 'gen8',
 		team: 'random',
-		ruleset: ['[Gen 8] Random (no PotD)'],
+		ruleset: ['[Gen 8] Unrated Random Battle'],
 	},
 	/**
 	*{
@@ -2727,7 +2698,7 @@ export const Formats: FormatList = [
 	*
 	*	mod: 'gen8',
 	*	team: 'random',
-	*	ruleset: ['[Gen 8] Random (no PotD)'],
+	*	ruleset: ['[Gen 8] Unrated Random Battle'],
 	*},
 	*/
 

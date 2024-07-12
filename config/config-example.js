@@ -464,7 +464,7 @@ exports.ratedtours = false;
  * disciplinary actions on your section. You can also leave this blank, in
  * which case users won't be given any information on how to appeal.
  */
-exports.appealurl = 'https://www.pokecommunity.com/showthread.php?t=434307';
+exports.appealurl = '';
 
 /**
  * repl - whether repl sockets are enabled or not
@@ -728,16 +728,6 @@ exports.grouplist = [
 		showmedia: true,
 		exportinputlog: true,
 		importinputlog: true,
-		broadcast: true,
-		announce: true,
-		tournaments: true,
-		tournamentsmoderation: true,
-		tournamentsmanagement: true,
-		jeopardy: true,
-		minigame: true,
-		game: true,
-		gamemoderation: true,
-		declare: true,
 	},
 	{
 		symbol: '^',
