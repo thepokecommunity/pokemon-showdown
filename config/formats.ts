@@ -2518,6 +2518,203 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		column: 3,
 	},
 	{
+		name: "[Gen 9] Team Magma/Aqua Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+		onBegin() {
+			for (const pokemon of this.getAllPokemon()) {
+				const weather = ['sunnyday', 'raindance'];
+				this.field.setWeather(weather[this.random(0, 2)], pokemon);
+				break;
+			}
+		},
+		onBeforeTurn() {
+			if (this.field.getWeather().name === '') {
+				const weather = ['sunnyday', 'raindance'];
+				this.field.setWeather(weather[this.random(0, 2)]);
+			}
+		},
+	},
+	{
+		name: "[Gen 9] 1v1 Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 1'],
+	},
+	{
+		name: "[Gen 9] Uber Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] OU/UU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] RU/NU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] PU/ZU Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Generational Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Kanto Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Johto Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Hoenn Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Sinnoh Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Unova Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Kalos Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Alola Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Galar Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Paldea Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Color Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+	},
+	{
+		name: "[Gen 9] Weather Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+		onBegin() {
+			for (const pokemon of this.getAllPokemon()) {
+				const weather = ['sunnyday', 'raindance', 'sandstorm', 'snow'];
+				this.field.setWeather(weather[this.random(0, 4)], pokemon);
+				break;
+			}
+		},
+		onBeforeTurn() {
+			if (this.field.getWeather().name === '') {
+				const weather = ['sunnyday', 'raindance', 'sandstorm', 'snow'];
+				this.field.setWeather(weather[this.random(0, 4)]);
+			}
+		},
+	},
+	{
+		name: "[Gen 9] Terrain Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+		onBegin() {
+			for (const pokemon of this.getAllPokemon()) {
+				const terrain = ['electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain'];
+				this.field.setTerrain(terrain[this.random(0, 4)], pokemon);
+				break;
+			}
+		},
+		onBeforeTurn() {
+			if (this.field.getTerrain().name === '') {
+				const terrain = ['electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain'];
+				this.field.setTerrain(terrain[this.random(0, 4)]);
+			}
+		},
+	},
+	{
+		name: "[Gen 9] Trick Room Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
+		onBegin() {
+			for (const pokemon of this.getAllPokemon()) {
+				this.field.addPseudoWeather('trickroom', pokemon);
+				break;
+			}
+		},
+		onBeforeTurn() {
+			if (this.field.getPseudoWeather(this.dex.conditions.get('trickroom')) == null) {
+				this.field.addPseudoWeather('trickroom');
+			}
+		},
+	},
+	{
+		name: "[Gen 9] Inverse Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle', 'Inverse Mod'],
+	},
+	{
 		name: "[Gen 9] Random Roulette",
 		desc: `Random Battles in a random generation! [Gen 1] Random Battle - [Gen 9] Random Battle.`,
 
@@ -2851,125 +3048,6 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 				return [`${set.name || set.species} has illegal moves.`, `(Pok\u00e9mon can only have one Metronome in their moveset)`];
 			}
 		},
-	},
-	{
-		name: "[Gen 9] 1v1 Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle', 'Team Preview', 'Picked Team Size = 1'],
-	},
-	{
-		name: "[Gen 9] Uber Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] OU/UU Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] RU/NU Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] PU Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Generational Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Kanto Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Johto Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Hoenn Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Sinnoh Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Unova Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Kalos Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Alola Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Galar Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Paldea Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Color Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
-	},
-	{
-		name: "[Gen 9] Inverse Random",
-
-		mod: 'gen9',
-		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle', 'Inverse Mod'],
 	},
 	{
 		name: "[Gen 8] Random Battle",

@@ -1751,6 +1751,10 @@ export class RandomTeams {
 		const pokemonPool: {[k: string]: string[]} = {};
 		const baseSpeciesPool = [];
 		const formatID = this.format.id;
+		const teamMagmaAqua = new Set(['Mightyena', 'Camerupt', 'Weezing', 'Groudon', 'Houndoom', 'Ninetales', 'Torkoal',
+			'Magcargo', 'Sandslash', 'Salamence', 'Banette', 'Rhydon', 'Rhyperior', 'Zangoose', 'Muk', 'Kyogre', 'Tentacruel',
+			'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo', 'Pelipper', 'Volbeat', 'Illumise', 'Dusknoir', 'Cacturne', 'Seviper',
+			'Lanturn']);
 		for (const pokemon of pokemonList) {
 			let species = this.dex.species.get(pokemon);
 			if (exclude.includes(species.id)) continue;
@@ -1766,8 +1770,8 @@ export class RandomTeams {
 				if (species.tier !== 'OU' && species.tier !== 'UUBL' && species.tier !== 'UU' && species.tier !== 'RUBL') continue;
 			} else if (formatID === 'gen9runurandom') {
 				if (species.tier !== 'RU' && species.tier !== 'NUBL' && species.tier !== 'NU' && species.tier !== 'PUBL') continue;
-			} else if (formatID === 'gen9purandom') {
-				if (species.tier !== 'PU') continue;
+			} else if (formatID === 'gen9puzurandom') {
+				if (species.tier !== 'PU' && species.tier !== 'ZUBL' && species.tier !== 'ZU') continue;
 			} else if (formatID === 'gen9generationalrandom') {
 				if (species.gen !== teamGeneration) continue;
 			} else if (formatID === 'gen9kantorandom') {
@@ -1790,6 +1794,10 @@ export class RandomTeams {
 				if (species.gen !== 9) continue;
 			} else if (formatID === 'gen9colorrandom') {
 				if (species.color !== teamColor) continue;
+			} else if (formatID === 'gen9teammagmaaquarandom') {
+				if (!teamMagmaAqua.has(species.name) && !species.types.includes('Fire') && !species.types.includes('Ground') &&
+					!species.types.includes('Rock') && !species.types.includes('Steel') && !species.types.includes('Water') &&
+					!species.types.includes('Electric')) continue;
 			}
 
 			if (species.baseSpecies in pokemonPool) {
@@ -1845,7 +1853,8 @@ export class RandomTeams {
 		let numMaxLevelPokemon = 0;
 
 		const pokemonList = isDoubles ? Object.keys(this.randomDoublesSets) : Object.keys(this.randomSets);
-		const [pokemonPool, baseSpeciesPool] = this.getPokemonPool(type, pokemon, isMonotype, pokemonList);
+		const [pokemonPool, baseSpeciesPool] = this.getPokemonPool(type, pokemon, isMonotype, teamGeneration, teamColor,
+			pokemonList);
 
 		let leadsRemaining = this.format.gameType === 'doubles' ? 2 : 1;
 		while (baseSpeciesPool.length && pokemon.length < this.maxTeamSize) {
@@ -1862,7 +1871,7 @@ export class RandomTeams {
 			// Illusion shouldn't be on the last slot
 			if (species.baseSpecies === 'Zoroark' && pokemon.length >= (this.maxTeamSize - 1)) continue;
 
-			if (species.name === 'Unown') continue;
+			if (species.baseSpecies === 'Unown') continue;
 
 			const types = species.types;
 			const typeCombo = types.slice().sort().join();
