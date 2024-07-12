@@ -1,7 +1,9 @@
+import {Utils} from '../../../lib';
+
 export const Scripts: ModdedBattleScriptsData = {
-	gen: 8,
-	inherit: 'gen8',
-	nextTurn() {
+	gen: 9,
+	inherit: 'gen9',
+	endTurn() {
 		this.turn++;
 		this.lastSuccessfulMoveThisTurn = null;
 
@@ -16,6 +18,9 @@ export const Scripts: ModdedBattleScriptsData = {
 				if (ally) {
 					// @ts-ignore
 					allyMoves = allyMoves.filter(move => !pokemon.moves.includes(move.id) && ally.m.curMoves.includes(move.id));
+					for (const aMove of allyMoves) {
+						aMove.pp = this.clampIntRange(aMove.maxpp - (pokemon.m.trackPP.get(aMove.id) || 0), 0);
+					}
 				}
 				pokemon.moveSlots = pokemon.moveSlots.concat(allyMoves);
 			}
@@ -33,6 +38,24 @@ export const Scripts: ModdedBattleScriptsData = {
 		}
 		for (const pokemon of dynamaxEnding) {
 			pokemon.removeVolatile('dynamax');
+		}
+
+		// Gen 1 partial trapping ends when either Pokemon or a switch in faints to residual damage
+		if (this.gen === 1) {
+			for (const pokemon of this.getAllActive()) {
+				if (pokemon.volatiles['partialtrappinglock']) {
+					const target = pokemon.volatiles['partialtrappinglock'].locked;
+					if (target.hp <= 0 || !target.volatiles['partiallytrapped']) {
+						delete pokemon.volatiles['partialtrappinglock'];
+					}
+				}
+				if (pokemon.volatiles['partiallytrapped']) {
+					const source = pokemon.volatiles['partiallytrapped'].source;
+					if (source.hp <= 0 || !source.volatiles['partialtrappinglock']) {
+						delete pokemon.volatiles['partiallytrapped'];
+					}
+				}
+			}
 		}
 
 		const trappedBySide: boolean[] = [];
@@ -60,9 +83,21 @@ export const Scripts: ModdedBattleScriptsData = {
 					moveSlot.disabled = false;
 					moveSlot.disabledSource = '';
 				}
+				if (pokemon.volatiles['encore']) {
+					// Encore check happens earlier than PiC move swapping, so end encore here.
+					const encoredMove = pokemon.volatiles['encore'].move;
+					if (!pokemon.moves.includes(encoredMove)) {
+						pokemon.removeVolatile('encore');
+					}
+				}
 				this.runEvent('DisableMove', pokemon);
-				if (!pokemon.ateBerry) pokemon.disableMove('belch');
-				if (!pokemon.getItem().isBerry) pokemon.disableMove('stuffcheeks');
+				for (const moveSlot of pokemon.moveSlots) {
+					const activeMove = this.dex.getActiveMove(moveSlot.id);
+					this.singleEvent('DisableMove', activeMove, null, pokemon);
+					if (activeMove.flags['cantusetwice'] && pokemon.lastMove?.id === moveSlot.id) {
+						pokemon.disableMove(pokemon.lastMove.id);
+					}
+				}
 
 				// If it was an illusion, it's not any more
 				if (pokemon.getLastAttackedBy() && this.gen >= 7) pokemon.knownType = true;
@@ -168,7 +203,7 @@ export const Scripts: ModdedBattleScriptsData = {
 		// Please remove me once there is client support.
 		if (this.ruleTable.has('crazyhouserule')) {
 			for (const side of this.sides) {
-				let buf = `raw|${side.name}'s team:<br />`;
+				let buf = `raw|${Utils.escapeHTML(side.name)}'s team:<br />`;
 				for (const pokemon of side.pokemon) {
 					if (!buf.endsWith('<br />')) buf += '/</span>&#8203;';
 					if (pokemon.fainted) {
@@ -183,13 +218,61 @@ export const Scripts: ModdedBattleScriptsData = {
 
 		this.makeRequest('move');
 	},
+	actions: {
+		runSwitch(pokemon) {
+			this.battle.runEvent('Swap', pokemon);
+
+			if (this.battle.gen >= 5) {
+				this.battle.runEvent('SwitchIn', pokemon);
+			}
+
+			this.battle.runEvent('EntryHazard', pokemon);
+
+			if (this.battle.gen <= 4) {
+				this.battle.runEvent('SwitchIn', pokemon);
+			}
+
+			const ally = pokemon.side.active.find(mon => mon && mon !== pokemon && !mon.fainted);
+
+			if (this.battle.gen <= 2 && !pokemon.side.faintedThisTurn && pokemon.draggedIn !== this.battle.turn) {
+				this.battle.runEvent('AfterSwitchInSelf', pokemon);
+			}
+			if (!pokemon.hp) return false;
+			pokemon.isStarted = true;
+			if (!pokemon.fainted) {
+				this.battle.singleEvent('Start', pokemon.getAbility(), pokemon.abilityState, pokemon);
+				// Start innates
+				let status;
+				if (pokemon.m.startVolatile && pokemon.m.innate) {
+					status = this.battle.dex.conditions.get(pokemon.m.innate);
+					this.battle.singleEvent('Start', status, pokemon.volatiles[status.id], pokemon);
+					pokemon.m.startVolatile = false;
+				}
+				if (ally && ally.m.startVolatile && ally.m.innate) {
+					status = this.battle.dex.conditions.get(ally.m.innate);
+					this.battle.singleEvent('Start', status, ally.volatiles[status.id], ally);
+					ally.m.startVolatile = false;
+				}
+				// pic end
+				this.battle.singleEvent('Start', pokemon.getItem(), pokemon.itemState, pokemon);
+			}
+			if (this.battle.gen === 4) {
+				for (const foeActive of pokemon.foes()) {
+					foeActive.removeVolatile('substitutebroken');
+				}
+			}
+			pokemon.draggedIn = null;
+			return true;
+		},
+	},
 	pokemon: {
 		setAbility(ability, source, isFromFormeChange) {
 			if (!this.hp) return false;
+			const BAD_ABILITIES = ['trace', 'imposter', 'neutralizinggas', 'illusion', 'wanderingspirit'];
 			if (typeof ability === 'string') ability = this.battle.dex.abilities.get(ability);
 			const oldAbility = this.ability;
 			if (!isFromFormeChange) {
-				if (ability.isPermanent || this.getAbility().isPermanent) return false;
+				if (ability.flags['cantsuppress'] || this.getAbility().flags['cantsuppress']) return false;
 			}
 			if (!this.battle.runEvent('SetAbility', this, source, this.battle.effect, ability)) return false;
 			this.battle.singleEvent('End', this.battle.dex.abilities.get(oldAbility), this.abilityState, this, source);
@@ -211,8 +294,10 @@ export const Scripts: ModdedBattleScriptsData = {
 						this.m.innate = 'ability:' + ally.getAbility().id;
 						this.addVolatile(this.m.innate);
 					}
-					ally.m.innate = 'ability:' + ability.id;
-					ally.addVolatile(ally.m.innate);
+					if (!BAD_ABILITIES.includes(ability.id)) {
+						ally.m.innate = 'ability:' + ability.id;
+						ally.addVolatile(ally.m.innate);
+					}
 				}
 			}
 			// Entrainment
@@ -239,9 +324,10 @@ export const Scripts: ModdedBattleScriptsData = {
 		},
 		transformInto(pokemon, effect) {
 			const species = pokemon.species;
-			if (pokemon.fainted || pokemon.illusion || (pokemon.volatiles['substitute'] && this.battle.gen >= 5) ||
+			if (pokemon.fainted || this.illusion || pokemon.illusion || (pokemon.volatiles['substitute'] && this.battle.gen >= 5) ||
 				(pokemon.transformed && this.battle.gen >= 2) || (this.transformed && this.battle.gen >= 5) ||
-				species.name === 'Eternatus-Eternamax') {
+				species.name === 'Eternatus-Eternamax' || (['Ogerpon', 'Terapagos'].includes(species.baseSpecies) &&
+				(this.terastallized || pokemon.terastallized))) {
 				return false;
 			}
 
@@ -257,7 +343,7 @@ export const Scripts: ModdedBattleScriptsData = {
 			this.transformed = true;
 			this.weighthg = pokemon.weighthg;
 
-			const types = pokemon.getTypes(true);
+			const types = pokemon.getTypes(true, true);
 			this.setType(pokemon.volatiles['roost'] ? pokemon.volatiles['roost'].typeWas : types, true);
 			this.addedType = pokemon.addedType;
 			this.knownType = this.isAlly(pokemon) && pokemon.knownType;
@@ -266,11 +352,12 @@ export const Scripts: ModdedBattleScriptsData = {
 			let statName: StatIDExceptHP;
 			for (statName in this.storedStats) {
 				this.storedStats[statName] = pokemon.storedStats[statName];
+				if (this.modifiedStats) this.modifiedStats[statName] = pokemon.modifiedStats![statName]; // Gen 1: Copy modified stats.
 			}
 			this.moveSlots = [];
-			this.set.ivs = (this.battle.gen >= 5 ? this.set.ivs : pokemon.set.ivs);
 			this.hpType = (this.battle.gen >= 5 ? this.hpType : pokemon.hpType);
 			this.hpPower = (this.battle.gen >= 5 ? this.hpPower : pokemon.hpPower);
+			this.timesAttacked = pokemon.timesAttacked;
 			for (const moveSlot of pokemon.moveSlots) {
 				let moveName = moveSlot.move;
 				if (!pokemon.m.curMoves.includes(moveSlot.id)) continue;
@@ -292,17 +379,9 @@ export const Scripts: ModdedBattleScriptsData = {
 			let boostName: BoostID;
 			for (boostName in pokemon.boosts) {
 				this.boosts[boostName] = pokemon.boosts[boostName];
-				if (this.battle.gen <= 1) {
-					if (boostName === 'evasion' || boostName === 'accuracy') continue;
-					if (this.boosts[boostName] >= 0) {
-						this.modifyStat!(boostName, [1, 1.5, 2, 2.5, 3, 3.5, 4][this.boosts[boostName]]);
-					} else {
-						this.modifyStat!(boostName, [100, 66, 50, 40, 33, 28, 25][-this.boosts[boostName]] / 100);
-					}
-				}
 			}
 			if (this.battle.gen >= 6) {
-				const volatilesToCopy = ['focusenergy', 'gmaxchistrike', 'laserfocus'];
+				const volatilesToCopy = ['dragoncheer', 'focusenergy', 'gmaxchistrike', 'laserfocus'];
 				for (const volatile of volatilesToCopy) {
 					if (pokemon.volatiles[volatile]) {
 						this.addVolatile(volatile);
@@ -317,7 +396,11 @@ export const Scripts: ModdedBattleScriptsData = {
 			} else {
 				this.battle.add('-transform', this, pokemon);
 			}
-			if (this.battle.gen > 2) this.setAbility(pokemon.ability, this, true);
+			if (this.terastallized) {
+				this.knownType = true;
+				this.apparentType = this.terastallized;
+			}
+			if (this.battle.gen > 2) this.setAbility(pokemon.ability, this, true, true);
 
 			// Change formes based on held items (for Transform)
 			// Only ever relevant in Generation 4 since Generation 3 didn't have item-based forme changes
@@ -340,7 +423,31 @@ export const Scripts: ModdedBattleScriptsData = {
 				}
 			}
 
+			// Pokemon transformed into Ogerpon cannot Terastallize
+			// restoring their ability to tera after they untransform is handled ELSEWHERE
+			if (this.species.baseSpecies === 'Ogerpon' && this.canTerastallize) this.canTerastallize = false;
+			if (this.species.baseSpecies === 'Terapagos' && this.canTerastallize) this.canTerastallize = false;
+
 			return true;
+		},
+		deductPP(move, amount, target) {
+			const gen = this.battle.gen;
+			move = this.battle.dex.moves.get(move);
+			const ppData = this.getMoveData(move);
+			if (!ppData) return 0;
+			ppData.used = true;
+			if (!ppData.pp && gen > 1) return 0;
+
+			if (!amount) amount = 1;
+			ppData.pp -= amount;
+			if (ppData.pp < 0 && gen > 1) {
+				amount += ppData.pp;
+				ppData.pp = 0;
+			}
+			if (!this.m.curMoves.includes(move.id)) {
+				this.m.trackPP.set(move.id, (this.m.trackPP.get(move.id) || 0) + amount);
+			}
+			return amount;
 		},
 	},
 };

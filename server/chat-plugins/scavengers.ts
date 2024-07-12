@@ -319,6 +319,7 @@ class ScavengerHuntDatabase {
 	}
 }
 export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
+	override readonly gameid = 'scavengerhunt' as ID;
 	gameType: GameTypes;
 	joinedIps: string[];
 	startTime: number;
@@ -330,7 +331,6 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 	mods: {[k: string]: ModEvent[]};
 	staffHostId: string;
 	staffHostName: string;
-	gameid: ID;
 	scavGame: true;
 	timerEnd: number | null;
 	timer: NodeJS.Timer | null;
@@ -372,7 +372,6 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 		this.staffHostName = staffHost.name;
 		this.cacheUserIps(staffHost); // store it in case of host subbing
 
-		this.gameid = 'scavengerhunt' as ID;
 		this.title = 'Scavenger Hunt';
 		this.scavGame = true;
 
@@ -487,7 +486,7 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 		if (player.completed) return user.sendTo(this.room, "You have already completed this scavenger hunt.");
 		this.runEvent('Leave', player);
 		this.joinedIps = this.joinedIps.filter(ip => !player.joinIps.includes(ip));
-		this.removePlayer(user);
+		this.removePlayer(player);
 		this.leftHunt[user.id] = 1;
 		user.sendTo(this.room, "You have left the scavenger hunt.");
 	}
@@ -526,7 +525,7 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 		return result === false ? true : result;
 	}
 
-	onEditQuestion(number: number, question_answer: string, value: string) {
+	onEditQuestion(questionNumber: number, question_answer: string, value: string) {
 		if (question_answer === 'question') question_answer = 'hint';
 		if (!['hint', 'answer'].includes(question_answer)) return false;
 
@@ -535,20 +534,22 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 			answer = value.split(';').map(p => p.trim());
 		}
 
-		if (!number || number < 1 || number > this.questions.length || (!answer && !value)) return false;
-
-		number--; // indexOf starts at 0
-
-		if (question_answer === 'answer') {
-			this.questions[number].answer = answer;
-		} else {
-			this.questions[number].hint = value;
+		if (!questionNumber || questionNumber < 1 || questionNumber > this.questions.length || (!answer && !value)) {
+			return false;
 		}
 
-		this.announce(`The ${question_answer} for question ${number + 1} has been edited.`);
+		questionNumber--; // indexOf starts at 0
+
+		if (question_answer === 'answer') {
+			this.questions[questionNumber].answer = answer;
+		} else {
+			this.questions[questionNumber].hint = value;
+		}
+
+		this.announce(`The ${question_answer} for question ${questionNumber + 1} has been edited.`);
 		if (question_answer === 'hint') {
 			for (const p in this.playerTable) {
-				this.playerTable[p].onNotifyChange(number);
+				this.playerTable[p].onNotifyChange(questionNumber);
 			}
 		}
 		return true;
@@ -701,6 +702,20 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 		player.destroy(); // remove from user.games;
 	}
 
+	onShowEndBoard(endedBy?: User) {
+		const sliceIndex = this.gameType === 'official' ? 5 : 3;
+		const hosts = Chat.toListString(this.hosts.map(h => `<em>${Utils.escapeHTML(h.name)}</em>`));
+
+		this.announce(
+			`The ${this.gameType ? `${this.gameType} ` : ""}scavenger hunt by ${hosts} was ended ${(endedBy ? "by " + Utils.escapeHTML(endedBy.name) : "automatically")}.<br />` +
+			`${this.completed.slice(0, sliceIndex).map((p, i) => `${Utils.formatOrder(i + 1)} place: <em>${Utils.escapeHTML(p.name)}</em> <span style="color: lightgreen;">[${p.time}]</span>.<br />`).join("")}` +
+			`${this.completed.length > sliceIndex ? `Consolation Prize: ${this.completed.slice(sliceIndex).map(e => `<em>${Utils.escapeHTML(e.name)}</em> <span style="color: lightgreen;">[${e.time}]</span>`).join(', ')}<br />` : ''}<br />` +
+			`<details style="cursor: pointer;"><summary>Solution: </summary><br />` +
+			`${this.questions.map((q, i) => `${i + 1}) ${Chat.formatText(q.hint)} <span style="color: lightgreen">[<em>${Utils.escapeHTML(q.answer.join(' / '))}</em>]</span>`).join("<br />")}` +
+			`</details>`
+		);
+	}
+
 	onEnd(reset?: boolean, endedBy?: User) {
 		if (!endedBy && (this.preCompleted ? this.preCompleted.length : this.completed.length) === 0) {
 			reset = true;
@@ -721,15 +736,8 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 			});
 		}
 		if (!reset) {
-			const sliceIndex = this.gameType === 'official' ? 5 : 3;
-
-			const hosts = Chat.toListString(this.hosts.map(h => `<em>${Utils.escapeHTML(h.name)}</em>`));
-
-			this.announce(
-				`The ${this.gameType ? `${this.gameType} ` : ""}scavenger hunt by ${hosts} was ended ${(endedBy ? "by " + Utils.escapeHTML(endedBy.name) : "automatically")}.<br />` +
-				`${this.completed.slice(0, sliceIndex).map((p, i) => `${Utils.formatOrder(i + 1)} place: <em>${Utils.escapeHTML(p.name)}</em> <span style="color: lightgreen;">[${p.time}]</span>.<br />`).join("")}${this.completed.length > sliceIndex ? `Consolation Prize: ${this.completed.slice(sliceIndex).map(e => `<em>${Utils.escapeHTML(e.name)}</em> <span style="color: lightgreen;">[${e.time}]</span>`).join(', ')}<br />` : ''}<br />` +
-				`<details style="cursor: pointer;"><summary>Solution: </summary><br />${this.questions.map((q, i) => `${i + 1}) ${Chat.formatText(q.hint)} <span style="color: lightgreen">[<em>${Utils.escapeHTML(q.answer.join(' / '))}</em>]</span>`).join("<br />")}</details>`
-			);
+			// Display the finishers' board
+			if (!this.runEvent('ShowEndBoard', endedBy)) this.onShowEndBoard(endedBy);
 
 			// give points for winning and blitzes in official games
 			if (!this.runEvent('GivePoints')) {
@@ -895,8 +903,7 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 		// do not remove players that have completed - they should still get to see the answers
 		if (player.completed) return true;
 
-		player.destroy();
-		delete this.playerTable[userid];
+		this.removePlayer(player);
 		return true;
 	}
 
@@ -905,7 +912,7 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 	onChatMessage(msg: string) {
 		let msgId = toID(msg) as string;
 
-		// idenitfy if there is a bot/dt command that failed
+		// identify if there is a bot/dt command that failed
 		// remove it and then match the rest of the post for leaks.
 		const commandMatch = ACCIDENTAL_LEAKS.exec(msg);
 		if (commandMatch) msgId = msgId.slice(toID(commandMatch[0]).length);
@@ -941,7 +948,7 @@ export class ScavengerHunt extends Rooms.RoomGame<ScavengerHuntPlayer> {
 			if (!allowOffline && (!user?.connected || !(user.id in room.users))) continue;
 
 			if (!user) {
-				// simply stick the ID's in there - dont keep any benign symbols passed by the hunt maker
+				// simply stick the ID's in there - don't keep any benign symbols passed by the hunt maker
 				hosts.push({name: id, id: id, noUpdate: true});
 				continue;
 			}
@@ -1699,7 +1706,7 @@ const ScavengerCommands: Chat.ChatCommands = {
 		}
 		if (!target && this.cmd !== 'queuerecycled') {
 			if (this.cmd === 'queue') {
-				// Necessary for broadcasting: this.runBroadcast();
+				this.runBroadcast();
 				const commandHandler = ScavengerCommands.viewqueue as ChatHandler;
 				commandHandler.call(this, target, room, user, this.connection, this.cmd, this.message);
 				return;

@@ -22,6 +22,10 @@ const SPECIAL_CATEGORIES: {[k: string]: string} = {
 	subcat3: 'Sub-Category 3',
 	subcat4: 'Sub-Category 4',
 	subcat5: 'Sub-Category 5',
+	oldae: 'Old Arts and Entertainment',
+	oldsg: 'Old Science and Geography',
+	oldsh: 'Old Society and Humanities',
+	oldpoke: 'Old Pok\u00E9mon',
 };
 
 const ALL_CATEGORIES: {[k: string]: string} = {...SPECIAL_CATEGORIES, ...MAIN_CATEGORIES};
@@ -202,12 +206,13 @@ async function getQuestions(
 		const questions = [];
 		for (const category of categories) {
 			if (category === 'all') {
-				questions.push(...await database.getQuestions('all', limit, {order}));
+				questions.push(...(await database.getQuestions('all', limit, {order})));
 			} else if (!ALL_CATEGORIES[category]) {
 				throw new Chat.ErrorMessage(`"${category}" is an invalid category.`);
 			}
 		}
-		return database.getQuestions(categories.filter(c => c !== 'all'), limit, {order});
+		questions.push(...(await database.getQuestions(categories.filter(c => c !== 'all'), limit, {order})));
+		return questions;
 	}
 }
 
@@ -359,7 +364,7 @@ class TriviaPlayer extends Rooms.RoomGamePlayer<Trivia> {
 }
 
 export class Trivia extends Rooms.RoomGame<TriviaPlayer> {
-	gameid: ID;
+	override readonly gameid = 'trivia' as ID;
 	kickedUsers: Set<string>;
 	canLateJoin: boolean;
 	game: TriviaGame;
@@ -378,7 +383,6 @@ export class Trivia extends Rooms.RoomGame<TriviaPlayer> {
 		isRandomMode = false, isSubGame = false, isRandomCategory = false,
 	) {
 		super(room, isSubGame);
-		this.gameid = 'trivia' as ID;
 		this.title = 'Trivia';
 		this.allowRenames = true;
 		this.playerCap = Number.MAX_SAFE_INTEGER;
@@ -573,14 +577,14 @@ export class Trivia extends Rooms.RoomGame<TriviaPlayer> {
 			this.kickedUsers.add(id);
 		}
 
-		super.removePlayer(user);
+		this.removePlayer(this.playerTable[user.id]);
 	}
 
 	leave(user: User) {
 		if (!this.playerTable[user.id]) {
 			throw new Chat.ErrorMessage(this.room.tr`You are not a player in the current game.`);
 		}
-		super.removePlayer(user);
+		this.removePlayer(this.playerTable[user.id]);
 	}
 
 	/**
@@ -1195,6 +1199,7 @@ export class TriumvirateModeTrivia extends Trivia {
  * which is a game of First mode trivia that ends after a specified interval.
  */
 export class Mastermind extends Rooms.SimpleRoomGame {
+	override readonly gameid = 'mastermind' as ID;
 	/** userid:score Map */
 	leaderboard: Map<ID, {score: number, hasLeft?: boolean}>;
 	phase: string;
@@ -1205,7 +1210,6 @@ export class Mastermind extends Rooms.SimpleRoomGame {
 		super(room);
 
 		this.leaderboard = new Map();
-		this.gameid = 'mastermind' as ID;
 		this.title = 'Mastermind';
 		this.allowRenames = true;
 		this.playerCap = Number.MAX_SAFE_INTEGER;
@@ -1383,7 +1387,7 @@ export class Mastermind extends Rooms.SimpleRoomGame {
 		if (lbEntry) {
 			this.leaderboard.set(user.id, {...lbEntry, hasLeft: true});
 		}
-		super.removePlayer(user);
+		this.removePlayer(this.playerTable[user.id]);
 	}
 
 	kick(toKick: User, kicker: User) {
@@ -1407,7 +1411,7 @@ export class Mastermind extends Rooms.SimpleRoomGame {
 			}
 		}
 
-		super.removePlayer(toKick);
+		this.removePlayer(this.playerTable[toKick.id]);
 	}
 }
 
@@ -1559,7 +1563,7 @@ const triviaCommands: Chat.ChatCommands = {
 					this.tr`There are not enough questions in the randomly chosen category to finish a trivia game.`
 				);
 			}
-			if (categories.length === 0 && categories[0] === 'all') {
+			if (categories.length === 1 && categories[0] === 'all') {
 				return this.errorReply(
 					this.tr`There are not enough questions in the trivia database to finish a trivia game.`
 				);
@@ -1837,8 +1841,10 @@ const triviaCommands: Chat.ChatCommands = {
 		if (toID(target) === 'all') {
 			if (isAccepting) await database.addQuestions(submissions);
 			await database.clearSubmissions();
-			this.modlog(`TRIVIAQUESTION`, null, `${(isAccepting ? "added" : "removed")} all questions from the submission database.`);
-			return this.privateModAction(`${user.name} ${(isAccepting ? " added " : " removed ")} all questions from the submission database.`);
+			const questionText = submissions.map(q => `"${q.question}"`).join(', ');
+			const message = `${(isAccepting ? "added" : "removed")} all questions (${questionText}) from the submission database.`;
+			this.modlog(`TRIVIAQUESTION`, null, message);
+			return this.privateModAction(`${user.name} ${message}`);
 		}
 
 		if (/\d+(?:-\d+)?(?:, ?\d+(?:-\d+)?)*$/.test(target)) {
@@ -1888,8 +1894,10 @@ const triviaCommands: Chat.ChatCommands = {
 				await database.deleteSubmissions(questions);
 			}
 
-			this.modlog('TRIVIAQUESTION', null, `${(isAccepting ? "added " : "removed ")}submission number${(indicesLen > 1 ? "s " : " ")}${target}`);
-			return this.privateModAction(`${user.name} ${(isAccepting ? "added " : "removed ")}submission number${(indicesLen > 1 ? "s " : " ")}${target} from the submission database.`);
+			const questionText = questions.map(q => `"${q}"`).join(', ');
+			const message = `${(isAccepting ? "added " : "removed ")}submission number${(indicesLen > 1 ? "s " : " ")}${target} (${questionText})`;
+			this.modlog('TRIVIAQUESTION', null, message);
+			return this.privateModAction(`${user.name} ${message} from the submission database.`);
 		}
 
 		this.errorReply(this.tr`'${target}' is an invalid argument. View /trivia help questions for more information.`);
@@ -2140,12 +2148,20 @@ const triviaCommands: Chat.ChatCommands = {
 
 	cssearch: 'search',
 	casesensitivesearch: 'search',
+	doublespacesearch: 'search',
 	async search(target, room, user, connection, cmd) {
 		room = this.requireRoom();
 		this.checkCan('show', null, room);
-		if (!target.includes(',')) return this.errorReply(this.tr`No valid search arguments entered.`);
 
-		let [type, ...query] = target.split(',');
+		let type, query;
+		if (cmd === 'doublespacesearch') {
+			query = ['  '];
+			type = target;
+		} else {
+			[type, ...query] = target.split(',');
+			if (!target.includes(',')) return this.errorReply(this.tr`No valid search arguments entered.`);
+		}
+
 		type = toID(type);
 		let options;
 
@@ -2159,7 +2175,8 @@ const triviaCommands: Chat.ChatCommands = {
 			);
 		}
 
-		const queryString = query.join(',').trim();
+		let queryString = query.join(',');
+		if (cmd !== 'doublespacesearch') queryString = queryString.trim();
 		if (!queryString) return this.errorReply(this.tr`No valid search query was entered.`);
 
 		const results = await database.searchQuestions(queryString, options);
@@ -2177,6 +2194,7 @@ const triviaCommands: Chat.ChatCommands = {
 	searchhelp: [
 		`/trivia search [type], [query] - Searches for questions based on their type and their query. This command is case-insensitive. Valid types: submissions, subs, questions, qs. Requires: + % @ * &`,
 		`/trivia casesensitivesearch [type], [query] - Like /trivia search, but is case sensitive (capital letters matter). Requires: + % @ * &`,
+		`/trivia doublespacesearch [type] — Searches for questions with back-to-back space characters. Requires: + % @ * &`,
 	],
 
 	async moveusedevent(target, room, user) {
@@ -2693,5 +2711,5 @@ export const commands: Chat.ChatCommands = {
 };
 
 process.nextTick(() => {
-	Chat.multiLinePattern.register('/trivia add ', '/trivia submit ');
+	Chat.multiLinePattern.register('/trivia add ', '/trivia submit ', '/trivia move ');
 });

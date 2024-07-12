@@ -1,6 +1,20 @@
-export const Abilities: {[k: string]: ModdedAbilityData} = {
+export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTable = {
 	disguise: {
 		inherit: true,
+		onDamage(damage, target, source, effect) {
+			if (
+				effect && effect.effectType === 'Move' &&
+				['mimikyu', 'mimikyutotem'].includes(target.species.id) && !target.transformed
+			) {
+				if (["rollout", "iceball"].includes(effect.id)) {
+					source.volatiles[effect.id].contactHitCount--;
+				}
+
+				this.add("-activate", target, "ability: Disguise");
+				this.effectState.busted = true;
+				return 0;
+			}
+		},
 		onUpdate(pokemon) {
 			if (['mimikyu', 'mimikyutotem'].includes(pokemon.species.id) && this.effectState.busted) {
 				const speciesid = pokemon.species.id === 'mimikyutotem' ? 'Mimikyu-Busted-Totem' : 'Mimikyu-Busted';
@@ -10,20 +24,16 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 	},
 	darkaura: {
 		inherit: true,
-		isBreakable: true,
+		flags: {breakable: 1},
 	},
 	fairyaura: {
 		inherit: true,
-		isBreakable: true,
+		flags: {breakable: 1},
 	},
 	innerfocus: {
 		inherit: true,
 		rating: 1,
-		onBoost() {},
-	},
-	intimidate: {
-		inherit: true,
-		rating: 4,
+		onTryBoost() {},
 	},
 	moody: {
 		inherit: true,
@@ -49,16 +59,16 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 			randomStat = stats.length ? this.sample(stats) : undefined;
 			if (randomStat) boost[randomStat] = -1;
 
-			this.boost(boost);
+			this.boost(boost, pokemon, pokemon);
 		},
 	},
 	oblivious: {
 		inherit: true,
-		onBoost() {},
+		onTryBoost() {},
 	},
 	owntempo: {
 		inherit: true,
-		onBoost() {},
+		onTryBoost() {},
 	},
 	rattled: {
 		onDamagingHit(damage, target, source, move) {
@@ -72,7 +82,7 @@ export const Abilities: {[k: string]: ModdedAbilityData} = {
 	},
 	scrappy: {
 		inherit: true,
-		onBoost() {},
+		onTryBoost() {},
 	},
 	slowstart: {
 		inherit: true,

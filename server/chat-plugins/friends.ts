@@ -88,15 +88,17 @@ export const Friends = new class {
 			.filter(item => categorized[item].length > 0)
 			.map(item => `${STATUS_TITLES[item]} (${categorized[item].length})`);
 
-		let buf = `<h3>Your friends: <small> `;
+		let buf = `<h3>Your friends: `;
 		if (sorted.length > 0) {
-			buf += `Total (${friends.length}) | ${sorted.join(' | ')}`;
+			buf += `<small> Total (${friends.length}) | ${sorted.join(' | ')}</small></h3> `;
 		} else {
 			buf += `</h3><em>you have no friends added on Showdown lol</em><br /><br /><br />`;
 			buf += `<strong>To add a friend, use </strong><code>/friend add [username]</code>.<br /><br />`;
 			return buf;
 		}
-		buf += `</h3> `;
+
+		buf += `<form data-submitsend="/friend add {username}">Add friend: <input class="textbox" name="username" /><br />`;
+		buf += `<button class="button" type="submit">Add <i class="fa fa-paper-plane"></i></button></form>`;
 
 		for (const key in categorized) {
 			const friendArray = categorized[key].sort();
@@ -143,9 +145,7 @@ export const Friends = new class {
 			buf += `<small>On an alternate account</small><br />`;
 		}
 		if (login && typeof login === 'number' && !user?.connected) {
-			// THIS IS A TERRIBLE HACK BUT IT WORKS OKAY
-			const time = Chat.toTimestamp(new Date(Number(login)), {human: true});
-			buf += `Last seen: ${time.split(' ').reverse().join(', on ')}`;
+			buf += `Last seen: <time>${new Date(Number(login)).toISOString()}</time>`;
 			buf += ` (${Chat.toDurationString(Date.now() - login, {precision: 1})} ago)`;
 		} else if (typeof login === 'string') {
 			buf += `${login}`;
@@ -343,11 +343,6 @@ export const commands: Chat.ChatCommands = {
 		async undorequest(target, room, user, connection) {
 			Friends.checkCanUse(this);
 			target = toID(target);
-			if (user.settings.blockFriendRequests) {
-				return sendPM(
-					`/error ${this.tr`You are blocking friend requests, and so cannot undo requests, as you have none.`}`, user.id
-				);
-			}
 			await Friends.removeRequest(target as ID, user.id);
 			this.refreshPage('friends-sent');
 			return sendPM(`You removed your friend request to '${target}'.`, user.id);
@@ -440,7 +435,7 @@ export const commands: Chat.ChatCommands = {
 				this.sendReply(`You are now allowing your friends to see your ongoing battles.`);
 			} else if (this.meansNo(target)) {
 				if (!user.settings.displayBattlesToFriends) {
-					return this.errorReply(this.tr`You not sharing your battles with friends.`);
+					return this.errorReply(this.tr`You are already not sharing your battles with friends.`);
 				}
 				user.settings.displayBattlesToFriends = false;
 				this.sendReply(`You are now hiding your ongoing battles from your friends.`);
@@ -590,6 +585,18 @@ export const pages: Chat.PageTable = {
 			buf += `value="/friends sharebattles off">Disable</button> `;
 			buf += `<button class="button${settings.displayBattlesToFriends ? ` disabled` : ``}" name="send" `;
 			buf += `value="/friends sharebattles on">Enable</button> <br /><br />`;
+
+			buf += `<strong>Block PMs except from friends (and staff):</strong><br />`;
+			buf += `<button class="button${settings.blockPMs ? `` : ' disabled'}" name="send" `;
+			buf += `value="/unblockpms&#10;/j view-friends-settings">Disable</button> `;
+			buf += `<button class="button${settings.blockPMs ? ` disabled` : ``}" name="send" `;
+			buf += `value="/blockpms friends&#10;/j view-friends-settings">Enable</button> <br /><br />`;
+
+			buf += `<strong>Block challenges except from friends (and staff):</strong><br />`;
+			buf += `<button class="button${settings.blockChallenges ? `` : ' disabled'}" name="send" `;
+			buf += `value="/unblockchallenges&#10;/j view-friends-settings">Disable</button> `;
+			buf += `<button class="button${settings.blockChallenges ? ` disabled` : ``}" name="send" `;
+			buf += `value="/blockchallenges friends&#10;/j view-friends-settings">Enable</button> <br /><br />`;
 			break;
 		case 'spectate':
 			this.title = `[Friends] Spectating`;

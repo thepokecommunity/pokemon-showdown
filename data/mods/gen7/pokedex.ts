@@ -1,4 +1,4 @@
-export const Pokedex: {[k: string]: ModdedSpeciesData} = {
+export const Pokedex: import('../../../sim/dex-species').ModdedSpeciesDataTable = {
 	pikachuoriginal: {
 		inherit: true,
 		abilities: {0: "Static"},
@@ -131,6 +131,11 @@ export const Pokedex: {[k: string]: ModdedSpeciesData} = {
 		inherit: true,
 		evoType: "levelExtra",
 		evoCondition: "near a special magnetic field",
+	},
+	crabominable: {
+		inherit: true,
+		evoType: "levelExtra",
+		evoCondition: "at Mount Lanakila",
 	},
 	lycanroc: {
 		inherit: true,
