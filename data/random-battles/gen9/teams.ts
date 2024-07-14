@@ -1751,7 +1751,7 @@ export class RandomTeams {
 		const formatID = this.format.id;
 
 		// For Generation
-		const teamGeneration = this.random(10);
+		const teamGeneration = this.random(9) + 1;
 
 		// For Color
 		const colorPool = ['Red', 'Blue', 'Yellow', 'Green', 'Black', 'Brown', 'Purple', 'Gray', 'White', 'Pink'];
