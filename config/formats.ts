@@ -2518,11 +2518,11 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		column: 3,
 	},
 	{
-		name: "[Gen 9] Team Magma/Aqua Random",
+		name: "[Gen 6] Team Magma/Aqua Random",
 
-		mod: 'gen9',
+		mod: 'gen6',
 		team: 'random',
-		ruleset: ['[Gen 9] Unrated Random Battle'],
+		ruleset: ['[Gen 6] Random Battle'],
 		onBegin() {
 			for (const pokemon of this.getAllPokemon()) {
 				const weather = ['sunnyday', 'raindance'];
@@ -2536,6 +2536,33 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 				this.field.setWeather(weather[this.random(0, 2)]);
 			}
 		},
+	},
+	{
+		name: "[Gen 3] Team Magma/Aqua Random",
+
+		mod: 'gen3',
+		team: 'random',
+		ruleset: ['[Gen 3] Random Battle'],
+		onBegin() {
+			for (const pokemon of this.getAllPokemon()) {
+				const weather = ['sunnyday', 'raindance'];
+				this.field.setWeather(weather[this.random(0, 2)], pokemon);
+				break;
+			}
+		},
+		onBeforeTurn() {
+			if (this.field.getWeather().name === '') {
+				const weather = ['sunnyday', 'raindance'];
+				this.field.setWeather(weather[this.random(0, 2)]);
+			}
+		},
+	},
+	{
+		name: "[Gen 9] Villain Random",
+
+		mod: 'gen9',
+		team: 'random',
+		ruleset: ['[Gen 9] Unrated Random Battle'],
 	},
 	{
 		name: "[Gen 9] 1v1 Random",
@@ -2573,7 +2600,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		ruleset: ['[Gen 9] Unrated Random Battle'],
 	},
 	{
-		name: "[Gen 9] Generational Random",
+		name: "[Gen 9] Generation Random",
 
 		mod: 'gen9',
 		team: 'random',

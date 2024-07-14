@@ -1750,18 +1750,36 @@ export class RandomTeams {
 		const baseSpeciesPool = [];
 		const formatID = this.format.id;
 
-		// For Generational
-		const teamGeneration = Math.floor(Math.random() * 7) + 1;
+		// For Generation
+		const teamGeneration = this.random(10);
 
 		// For Color
 		const colorPool = ['Red', 'Blue', 'Yellow', 'Green', 'Black', 'Brown', 'Purple', 'Gray', 'White', 'Pink'];
 		const teamColor = colorPool[this.random(colorPool.length)];
 
-		// For Team Magma/Aqua
-		const teamMagmaAqua = new Set(['Mightyena', 'Camerupt', 'Weezing', 'Groudon', 'Houndoom', 'Ninetales', 'Torkoal',
-			'Magcargo', 'Sandslash', 'Salamence', 'Banette', 'Rhydon', 'Rhyperior', 'Zangoose', 'Muk', 'Kyogre', 'Tentacruel',
-			'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo', 'Pelipper', 'Volbeat', 'Illumise', 'Dusknoir', 'Cacturne', 'Seviper',
-			'Lanturn']);
+		// For Villain
+		const villainPool = ['Rocket', 'Magma', 'Aqua', 'Galactic']
+		const teamVillain = villainPool[this.random(4)];
+		const teamRocket = new Set(['Rhydon', 'Rhyperior', 'Dugtrio', 'Persian', 'Honchkrow', 'Golem', 'Sandslash', 'Garchomp',
+			'Gliscor', 'Krookodile', 'Hippowdon', 'Mewtwo', 'Exeggutor', 'Gyarados', 'Arcanine', 'Tauros', 'Gengar', 'Moltres',
+			'Charizard', 'Houndoom', 'Weezing', 'Electrode', 'Muk', 'Misdreavus', 'Victreebel', 'Hypno', 'Tyranitar', 'Delibird',
+			'Ariados', 'Ho-Oh', 'Lugia', 'Celebi', 'Forretress', 'Skarmory', 'Arbok', 'Vileplume', 'Magcargo', 'Scyther', 'Scizor',
+			'Raichu', 'Girafarig', 'Jumpluff', 'Banette', 'Darkrai', 'Salamence', 'Weavile', 'Metagross', 'Magnezone', 'Pelipper',
+			'Drednaw', 'Toxapex', 'Mimikyu', 'Seviper', 'Yanmega', 'Amoonguss', 'Malamar', 'Morpeko', 'Venomoth', 'Poliwrath',
+			'Clefable', 'Tentacruel', 'Dewgong', 'Cloyster', 'Slowbro', 'Slowking', 'Vaporeon', 'Dodrio', 'Sudowoodo', 'Dunsparce',
+			'Azumarill', 'Toxicroak', 'Skuntank', 'Primeape', 'Golduck', 'Hitmonlee', 'Qwilfish', 'Ninetales', 'Articuno', 'Zapdos',
+			'Snorlax', 'Raikou', 'Entei', 'Suicune', 'Ditto', 'Furret']);
+		const teamMagma = new Set(['Mightyena', 'Camerupt', 'Weezing', 'Groudon', 'Houndoom', 'Ninetales', 'Torkoal',
+			'Magcargo', 'Sandslash', 'Salamence', 'Banette', 'Rhydon', 'Rhyperior', 'Zangoose']);
+		const teamAqua = new Set(['Mightyena', 'Muk', 'Kyogre', 'Tentacruel', 'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo',
+			'Pelipper', 'Volbeat', 'Dusknoir', 'Cacturne', 'Seviper', 'Lanturn']);
+		const teamGalactic = new Set(['Honchkrow', 'Weavile', 'Gyarados', 'Houndoom', 'Dialga', 'Palkia', 'Giratina',
+			'Giratina-Origin', 'Raichu', 'Bronzong', 'Salamence', 'Espeon', 'Entei', 'Rotom-Heat', 'Darkrai', 'Uxie', 'Mesprit',
+			'Azelf', 'Probopass', 'Magnezone', 'Electrode', 'Arcanine', 'Camerupt', 'Charizard', 'Crawdaunt', 'Sableye', 'Zapdos',
+			'Toxicroak', 'Skuntank', 'Gengar', 'Tyranitar', 'Heatran', 'Gallade', 'Rhyperior', 'Magmortar', 'Ambipom', 'Slowking',
+			'Rampardos', 'Electivire', 'Yanmega', 'Porygon-Z', 'Gastrodon', 'Persian', 'Banette', 'Abomasnow', 'Staraptor', 'Muk',
+			'Hypno', 'Hitmonchan', 'Primeape', 'Charizard', 'Blaziken', 'Torkoal', 'Forretress']);
+		const villainMap = new Map([['Rocket', teamRocket], ['Magma', teamMagma], ['Aqua', teamAqua], ['Galactic', teamGalactic]])
 
 		for (const pokemon of pokemonList) {
 			let species = this.dex.species.get(pokemon);
@@ -1780,7 +1798,7 @@ export class RandomTeams {
 				if (species.tier !== 'RU' && species.tier !== 'NUBL' && species.tier !== 'NU' && species.tier !== 'PUBL') continue;
 			} else if (formatID === 'gen9puzurandom') {
 				if (species.tier !== 'PU' && species.tier !== 'ZUBL' && species.tier !== 'ZU') continue;
-			} else if (formatID === 'gen9generationalrandom') {
+			} else if (formatID === 'gen9generationrandom') {
 				if (species.gen !== teamGeneration) continue;
 			} else if (formatID === 'gen9kantorandom') {
 				if (species.gen !== 1) continue;
@@ -1802,10 +1820,10 @@ export class RandomTeams {
 				if (species.gen !== 9) continue;
 			} else if (formatID === 'gen9colorrandom') {
 				if (species.color !== teamColor) continue;
-			} else if (formatID === 'gen9teammagmaaquarandom') {
-				if (!teamMagmaAqua.has(species.name) && !species.types.includes('Fire') && !species.types.includes('Ground') &&
-					!species.types.includes('Rock') && !species.types.includes('Steel') && !species.types.includes('Water') &&
-					!species.types.includes('Electric')) continue;
+			} else if (formatID === 'gen9villainrandom') {
+				if (villainMap.get(teamVillain) !== undefined) {
+					if (!(villainMap.get(teamVillain)?.has(species.name))) continue;
+				}
 			}
 
 			if (species.baseSpecies in pokemonPool) {

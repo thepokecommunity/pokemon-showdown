@@ -2420,6 +2420,15 @@ export class RandomGen8Teams {
 		const exclude = pokemonToExclude.map(p => toID(p.species));
 		const pokemonPool: {[k: string]: string[]} = {};
 		const baseSpeciesPool = [];
+
+		// For Team Magma/Aqua
+		const formatID = this.format.id;
+		const teamMagmaAqua = new Set(['Mightyena', 'Crobat', 'Camerupt', 'Weezing', 'Groudon', 'Swellow', 'Houndoom', 'Ninetales',
+			'Torkoal', 'Magcargo', 'Armaldo', 'Claydol', 'Sandslash', 'Salamence', 'Banette', 'Aggron', 'Rhydon', 'Rhyperior',
+			'Zangoose', 'Sharpedo', 'Muk', 'Kyogre', 'Walrein', 'Tentacruel', 'Qwilfish', 'Mantine', 'Seaking', 'Gyarados',
+			'Octillery', 'Lanturn', 'Cloyster', 'Huntail', 'Corsola', 'Whiscash', 'Wailord', 'Kingdra', 'Azumarill', 'Flygon',
+			'Crawdaunt', 'Ludicolo', 'Ninjask', 'Shedinja', 'Gorebyss', 'Pelipper', 'Volbeat', 'Dusclops', 'Dusknoir', 'Cacturne',
+			'Manectric', 'Seviper']);
 		for (const pokemon of pokemonList) {
 			let species = this.dex.species.get(pokemon);
 			if (exclude.includes(species.id)) continue;
@@ -2429,6 +2438,9 @@ export class RandomGen8Teams {
 					species = this.dex.species.get(species.battleOnly);
 					if (!species.types.includes(type)) continue;
 				}
+			}
+			if (formatID === 'gen6teammagmaaquarandom' || formatID === 'gen3teammagmaaquarandom') {
+				if (!teamMagmaAqua.has(species.name)) continue;
 			}
 
 			if (species.baseSpecies in pokemonPool) {
