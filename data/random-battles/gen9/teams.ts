@@ -1772,7 +1772,8 @@ export class RandomTeams {
 		const teamMagma = new Set(['Mightyena', 'Camerupt', 'Weezing', 'Groudon', 'Houndoom', 'Ninetales', 'Torkoal',
 			'Magcargo', 'Sandslash', 'Salamence', 'Banette', 'Rhydon', 'Rhyperior', 'Zangoose']);
 		const teamAqua = new Set(['Mightyena', 'Muk', 'Kyogre', 'Tentacruel', 'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo',
-			'Pelipper', 'Volbeat', 'Dusknoir', 'Cacturne', 'Seviper', 'Lanturn']);
+			'Pelipper', 'Volbeat', 'Dusknoir', 'Cacturne', 'Seviper', 'Lanturn', 'Qwilfish', 'Gyarados', 'Cloyster', 'Whiscash',
+			'Kingdra']);
 		const teamGalactic = new Set(['Honchkrow', 'Weavile', 'Gyarados', 'Houndoom', 'Dialga', 'Palkia', 'Giratina',
 			'Giratina-Origin', 'Raichu', 'Bronzong', 'Salamence', 'Espeon', 'Entei', 'Rotom-Heat', 'Darkrai', 'Uxie', 'Mesprit',
 			'Azelf', 'Probopass', 'Magnezone', 'Electrode', 'Arcanine', 'Camerupt', 'Charizard', 'Crawdaunt', 'Sableye', 'Zapdos',

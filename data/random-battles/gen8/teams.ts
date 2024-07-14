@@ -2423,12 +2423,14 @@ export class RandomGen8Teams {
 
 		// For Team Magma/Aqua
 		const formatID = this.format.id;
-		const teamMagmaAqua = new Set(['Mightyena', 'Crobat', 'Camerupt', 'Weezing', 'Groudon', 'Swellow', 'Houndoom', 'Ninetales',
-			'Torkoal', 'Magcargo', 'Armaldo', 'Claydol', 'Sandslash', 'Salamence', 'Banette', 'Aggron', 'Rhydon', 'Rhyperior',
-			'Zangoose', 'Sharpedo', 'Muk', 'Kyogre', 'Walrein', 'Tentacruel', 'Qwilfish', 'Mantine', 'Seaking', 'Gyarados',
-			'Octillery', 'Lanturn', 'Cloyster', 'Huntail', 'Corsola', 'Whiscash', 'Wailord', 'Kingdra', 'Azumarill', 'Flygon',
-			'Crawdaunt', 'Ludicolo', 'Ninjask', 'Shedinja', 'Gorebyss', 'Pelipper', 'Volbeat', 'Dusclops', 'Dusknoir', 'Cacturne',
-			'Manectric', 'Seviper']);
+		const teamMagmaAqua = new Set(['Mightyena', 'Crobat', 'Camerupt', 'Camerupt-Mega', 'Weezing', 'Groudon', 'Groudon-Primal',
+			'Swellow', 'Houndoom', 'Houndoom-Mega', 'Ninetales', 'Torkoal', 'Magcargo', 'Armaldo', 'Claydol', 'Sandslash',
+			'Salamence', 'Salamence-Mega', 'Banette', 'Banette-Mega', 'Aggron', 'Aggron-Mega', 'Rhydon', 'Rhyperior', 'Zangoose',
+			'Sharpedo', 'Sharpedo-Mega', 'Muk', 'Kyogre', 'Kyogre-Primal', 'Walrein', 'Tentacruel', 'Qwilfish', 'Mantine', 'Seaking',
+			'Gyarados', 'Gyarados-Mega', 'Octillery', 'Lanturn', 'Cloyster', 'Huntail', 'Corsola', 'Whiscash', 'Wailord', 'Kingdra',
+			'Azumarill', 'Flygon', 'Crawdaunt', 'Ludicolo', 'Ninjask', 'Shedinja', 'Gorebyss', 'Pelipper', 'Volbeat', 'Dusclops',
+			'Dusknoir', 'Cacturne', 'Manectric', 'Manectric-Mega', 'Seviper']);
+
 		for (const pokemon of pokemonList) {
 			let species = this.dex.species.get(pokemon);
 			if (exclude.includes(species.id)) continue;
