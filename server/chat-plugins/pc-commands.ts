@@ -34,8 +34,8 @@ export const commands: ChatCommands = {
 		);
 	},
 
-	autojoinroom(target, room, user) {
-		if (!this.can('makeroom')) return;
+	/*autojoinroom(target, room, user) {
+		this.checkCan('makeroom');
 		if (target === 'off') {
 			delete room.autojoin;
 			this.addModAction(user.name + ` removed this room from the autojoin list.`);
@@ -47,13 +47,13 @@ export const commands: ChatCommands = {
 			room.chatRoomData.autojoin = true;
 			Rooms.global.writeChatRoomData();
 		}
-	},
+	},*/
 
 	toggleladdermessage: 'toggleladdermsg',
 	toggleladdermessages: 'toggleladdermsg',
 	toggleladdermsg(target, room, user) {
-		if (room.id !== 'lobby') return this.errorReply(`This command can only be used in Lobby.`);
-		if (!this.can('warn')) return false;
+		if (room.roomid !== 'lobby') return this.errorReply(`This command can only be used in Lobby.`);
+		this.checkCan('warn', null, room);
 		room.disableLadderMessages = !room.disableLadderMessages;
 		this.sendReply(`Disallowing ladder messages is set to ` + room.disableLadderMessages + ` in this room.`);
 		if (room.disableLadderMessages) {
@@ -67,7 +67,7 @@ export const commands: ChatCommands = {
 	togglebattlemessage: 'togglebattlemsg',
 	togglebattlemessages: 'togglebattlemsg',
 	togglebattlemsg(target, room, user) {
-		if (!this.can('warn')) return false;
+		this.checkCan('warn', null, room);
 		if (Config.reportbattles === true) {
 			Config.reportbattles = false;
 			this.add(`|raw|<div class="broadcast-blue"><b>Battle messages are disabled!</b><br>Battles will no longer be reported in the Lobby.</div>`);

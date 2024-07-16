@@ -235,6 +235,8 @@ export abstract class BasicRoom {
 	 */
 	nthMessageHandlers: Map<MessageHandler, number>;
 
+	disableLadderMessages: boolean;
+
 	constructor(roomid: RoomID, title?: string, options: Partial<RoomSettings> = {}) {
 		this.users = Object.create(null);
 		this.type = 'chat';
@@ -327,6 +329,8 @@ export abstract class BasicRoom {
 		this.game = null;
 		this.battle = null;
 		this.validateTitle(this.title, this.roomid);
+
+		this.disableLadderMessages = false;
 	}
 
 	toString() {

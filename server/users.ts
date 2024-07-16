@@ -423,6 +423,9 @@ export class User extends Chat.MessageContext {
 	statusType: StatusType;
 	userMessage: string;
 	lastWarnedAt: number;
+
+	lastLadderTime: number;
+	lastLadderFormat: string;
 	constructor(connection: Connection) {
 		super(connection.user);
 		this.user = this;

@@ -331,14 +331,15 @@ class Ladder extends LadderStore {
 		if (!search) return;
 
 		// Ladder search messages
+		Rooms.lobby?.isMuted
 		if (
-			!user.locked && !Rooms.lobby.isMuted(user) && !Rooms.lobby.disableLadderMessages &&
+			!user.locked && !Rooms.lobby?.isMuted(user) && !Rooms.lobby?.disableLadderMessages &&
 			(((Date.now() - user.lastLadderTime) > SEARCH_COOLDOWN) &&
 			user.lastLadderFormat !== this.formatid)
 		) {
 			if (Rooms.lobby) {
 				Rooms.lobby
-					.add('|c|' + user.getIdentity('lobby') + '|/me is searching for a ' + Dex.getFormat(this.formatid).name + ' battle!')
+					.add('|c|' + user.getIdentity(Rooms.lobby) + '|/me is searching for a ' + Dex.formats.get(this.formatid).name + ' battle!')
 					.update();
 			}
 			user.lastLadderFormat = this.formatid;
@@ -346,6 +347,7 @@ class Ladder extends LadderStore {
 		}
 
 		this.addSearch(search, user);
+		Dex.forFormat
 	}
 
 	/**
